@@ -1,5 +1,12 @@
 package main
 
+import (
+	"fmt"
+	"os"
+
+	"github.com/joho/godotenv"
+)
+
 // BotToken holds the token to use to authenticate the bot
 var BotToken string
 
@@ -11,6 +18,6 @@ func init() {
 
 	// load the variables from the environment
 	if t := os.Getenv("TOKEN"); t != "" {
-		JWTSecret = t
+		BotToken = t
 	}
 }
