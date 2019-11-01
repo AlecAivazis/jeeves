@@ -16,6 +16,8 @@ for your guild including:
 
 ## Setup
 
+### Channel Roles
+
 Jeeves works across many channels in your guild. Once you have invited Jeeves to your guild, you
 must assign the neccessary channels for each feature to work. In order to assign a channel, navigate
 to the appropriate channel and type `!jeeves-assign-channel <role>`.
@@ -25,7 +27,7 @@ to the appropriate channel and type `!jeeves-assign-channel <role>`.
 | bank         | The channel that will have the summary of the bank                                       |
 | bank-log     | The channel that the bank manager will use to record items moving in and out of the bank |
 
-## Roles
+### User Roles
 
 Most guilds want to limit restrict certain actions like managing the guild bank to a subset of users.
 Jeeves relies on Discord's Role system to enforce these restrictions. When Jeeves is first added to your
