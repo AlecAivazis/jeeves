@@ -31,6 +31,8 @@ func ExampleBankItem() {
 	// create bankitem vertex with its edges.
 	bi := client.BankItem.
 		Create().
+		SetItemID("string").
+		SetQuantity(1).
 		SaveX(ctx)
 	log.Println("bankitem created:", bi)
 

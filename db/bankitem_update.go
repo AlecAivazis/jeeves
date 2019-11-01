@@ -14,7 +14,10 @@ import (
 // BankItemUpdate is the builder for updating BankItem entities.
 type BankItemUpdate struct {
 	config
-	predicates []predicate.BankItem
+	itemID      *string
+	quantity    *int
+	addquantity *int
+	predicates  []predicate.BankItem
 }
 
 // Where adds a new predicate for the builder.
@@ -23,8 +26,36 @@ func (biu *BankItemUpdate) Where(ps ...predicate.BankItem) *BankItemUpdate {
 	return biu
 }
 
+// SetItemID sets the itemID field.
+func (biu *BankItemUpdate) SetItemID(s string) *BankItemUpdate {
+	biu.itemID = &s
+	return biu
+}
+
+// SetQuantity sets the quantity field.
+func (biu *BankItemUpdate) SetQuantity(i int) *BankItemUpdate {
+	biu.quantity = &i
+	biu.addquantity = nil
+	return biu
+}
+
+// AddQuantity adds i to quantity.
+func (biu *BankItemUpdate) AddQuantity(i int) *BankItemUpdate {
+	if biu.addquantity == nil {
+		biu.addquantity = &i
+	} else {
+		*biu.addquantity += i
+	}
+	return biu
+}
+
 // Save executes the query and returns the number of rows/vertices matched by this operation.
 func (biu *BankItemUpdate) Save(ctx context.Context) (int, error) {
+	if biu.quantity != nil {
+		if err := bankitem.QuantityValidator(*biu.quantity); err != nil {
+			return 0, fmt.Errorf("db: validator failed for field \"quantity\": %v", err)
+		}
+	}
 	return biu.sqlSave(ctx)
 }
 
@@ -80,6 +111,25 @@ func (biu *BankItemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err != nil {
 		return 0, err
 	}
+	var (
+		res     sql.Result
+		updater = builder.Update(bankitem.Table).Where(sql.InInts(bankitem.FieldID, ids...))
+	)
+	if value := biu.itemID; value != nil {
+		updater.Set(bankitem.FieldItemID, *value)
+	}
+	if value := biu.quantity; value != nil {
+		updater.Set(bankitem.FieldQuantity, *value)
+	}
+	if value := biu.addquantity; value != nil {
+		updater.Add(bankitem.FieldQuantity, *value)
+	}
+	if !updater.Empty() {
+		query, args := updater.Query()
+		if err := tx.Exec(ctx, query, args, &res); err != nil {
+			return 0, rollback(tx, err)
+		}
+	}
 	if err = tx.Commit(); err != nil {
 		return 0, err
 	}
@@ -89,11 +139,42 @@ func (biu *BankItemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // BankItemUpdateOne is the builder for updating a single BankItem entity.
 type BankItemUpdateOne struct {
 	config
-	id int
+	id          int
+	itemID      *string
+	quantity    *int
+	addquantity *int
+}
+
+// SetItemID sets the itemID field.
+func (biuo *BankItemUpdateOne) SetItemID(s string) *BankItemUpdateOne {
+	biuo.itemID = &s
+	return biuo
+}
+
+// SetQuantity sets the quantity field.
+func (biuo *BankItemUpdateOne) SetQuantity(i int) *BankItemUpdateOne {
+	biuo.quantity = &i
+	biuo.addquantity = nil
+	return biuo
+}
+
+// AddQuantity adds i to quantity.
+func (biuo *BankItemUpdateOne) AddQuantity(i int) *BankItemUpdateOne {
+	if biuo.addquantity == nil {
+		biuo.addquantity = &i
+	} else {
+		*biuo.addquantity += i
+	}
+	return biuo
 }
 
 // Save executes the query and returns the updated entity.
 func (biuo *BankItemUpdateOne) Save(ctx context.Context) (*BankItem, error) {
+	if biuo.quantity != nil {
+		if err := bankitem.QuantityValidator(*biuo.quantity); err != nil {
+			return nil, fmt.Errorf("db: validator failed for field \"quantity\": %v", err)
+		}
+	}
 	return biuo.sqlSave(ctx)
 }
 
@@ -151,6 +232,28 @@ func (biuo *BankItemUpdateOne) sqlSave(ctx context.Context) (bi *BankItem, err e
 	tx, err := biuo.driver.Tx(ctx)
 	if err != nil {
 		return nil, err
+	}
+	var (
+		res     sql.Result
+		updater = builder.Update(bankitem.Table).Where(sql.InInts(bankitem.FieldID, ids...))
+	)
+	if value := biuo.itemID; value != nil {
+		updater.Set(bankitem.FieldItemID, *value)
+		bi.ItemID = *value
+	}
+	if value := biuo.quantity; value != nil {
+		updater.Set(bankitem.FieldQuantity, *value)
+		bi.Quantity = *value
+	}
+	if value := biuo.addquantity; value != nil {
+		updater.Add(bankitem.FieldQuantity, *value)
+		bi.Quantity += *value
+	}
+	if !updater.Empty() {
+		query, args := updater.Query()
+		if err := tx.Exec(ctx, query, args, &res); err != nil {
+			return nil, rollback(tx, err)
+		}
 	}
 	if err = tx.Commit(); err != nil {
 		return nil, err

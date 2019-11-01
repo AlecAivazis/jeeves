@@ -2,11 +2,19 @@
 
 package bankitem
 
+import (
+	"github.com/AlecAivazis/jeeves/db/schema"
+)
+
 const (
 	// Label holds the string label denoting the bankitem type in the database.
 	Label = "bank_item"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldItemID holds the string denoting the itemid vertex property in the database.
+	FieldItemID = "item_id"
+	// FieldQuantity holds the string denoting the quantity vertex property in the database.
+	FieldQuantity = "quantity"
 
 	// Table holds the table name of the bankitem in the database.
 	Table = "bank_items"
@@ -15,4 +23,15 @@ const (
 // Columns holds all SQL columns are bankitem fields.
 var Columns = []string{
 	FieldID,
+	FieldItemID,
+	FieldQuantity,
 }
+
+var (
+	fields = schema.BankItem{}.Fields()
+
+	// descQuantity is the schema descriptor for quantity field.
+	descQuantity = fields[1].Descriptor()
+	// QuantityValidator is a validator for the "quantity" field. It is called by the builders before save.
+	QuantityValidator = descQuantity.Validators[0].(func(int) error)
+)

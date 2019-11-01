@@ -4,6 +4,8 @@ package db
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/AlecAivazis/jeeves/db/bankitem"
 	"github.com/facebookincubator/ent/dialect/sql"
@@ -12,10 +14,33 @@ import (
 // BankItemCreate is the builder for creating a BankItem entity.
 type BankItemCreate struct {
 	config
+	itemID   *string
+	quantity *int
+}
+
+// SetItemID sets the itemID field.
+func (bic *BankItemCreate) SetItemID(s string) *BankItemCreate {
+	bic.itemID = &s
+	return bic
+}
+
+// SetQuantity sets the quantity field.
+func (bic *BankItemCreate) SetQuantity(i int) *BankItemCreate {
+	bic.quantity = &i
+	return bic
 }
 
 // Save creates the BankItem in the database.
 func (bic *BankItemCreate) Save(ctx context.Context) (*BankItem, error) {
+	if bic.itemID == nil {
+		return nil, errors.New("db: missing required field \"itemID\"")
+	}
+	if bic.quantity == nil {
+		return nil, errors.New("db: missing required field \"quantity\"")
+	}
+	if err := bankitem.QuantityValidator(*bic.quantity); err != nil {
+		return nil, fmt.Errorf("db: validator failed for field \"quantity\": %v", err)
+	}
 	return bic.sqlSave(ctx)
 }
 
@@ -38,6 +63,14 @@ func (bic *BankItemCreate) sqlSave(ctx context.Context) (*BankItem, error) {
 		return nil, err
 	}
 	insert := builder.Insert(bankitem.Table).Default()
+	if value := bic.itemID; value != nil {
+		insert.Set(bankitem.FieldItemID, *value)
+		bi.ItemID = *value
+	}
+	if value := bic.quantity; value != nil {
+		insert.Set(bankitem.FieldQuantity, *value)
+		bi.Quantity = *value
+	}
 	id, err := insertLastID(ctx, tx, insert.Returning(bankitem.FieldID))
 	if err != nil {
 		return nil, rollback(tx, err)

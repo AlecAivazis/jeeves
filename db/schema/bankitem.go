@@ -1,6 +1,9 @@
 package schema
 
-import "github.com/facebookincubator/ent"
+import (
+	"github.com/facebookincubator/ent"
+	"github.com/facebookincubator/ent/schema/field"
+)
 
 // BankItem holds the schema definition for the BankItem entity.
 type BankItem struct {
@@ -9,7 +12,10 @@ type BankItem struct {
 
 // Fields of the BankItem.
 func (BankItem) Fields() []ent.Field {
-	return nil
+	return []ent.Field{
+		field.String("itemID").Unique(),
+		field.Int("quantity").Positive(),
+	}
 }
 
 // Edges of the BankItem.

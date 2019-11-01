@@ -11,6 +11,8 @@ var (
 	// BankItemsColumns holds the columns for the "bank_items" table.
 	BankItemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "item_id", Type: field.TypeString, Unique: true},
+		{Name: "quantity", Type: field.TypeInt},
 	}
 	// BankItemsTable holds the schema information for the "bank_items" table.
 	BankItemsTable = &schema.Table{

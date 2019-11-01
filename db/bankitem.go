@@ -11,23 +11,33 @@ import (
 
 // BankItem is the model entity for the BankItem schema.
 type BankItem struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// ItemID holds the value of the "itemID" field.
+	ItemID string `json:"itemID,omitempty"`
+	// Quantity holds the value of the "quantity" field.
+	Quantity int `json:"quantity,omitempty"`
 }
 
 // FromRows scans the sql response data into BankItem.
 func (bi *BankItem) FromRows(rows *sql.Rows) error {
 	var vbi struct {
-		ID int
+		ID       int
+		ItemID   sql.NullString
+		Quantity sql.NullInt64
 	}
 	// the order here should be the same as in the `bankitem.Columns`.
 	if err := rows.Scan(
 		&vbi.ID,
+		&vbi.ItemID,
+		&vbi.Quantity,
 	); err != nil {
 		return err
 	}
 	bi.ID = vbi.ID
+	bi.ItemID = vbi.ItemID.String
+	bi.Quantity = int(vbi.Quantity.Int64)
 	return nil
 }
 
@@ -54,6 +64,10 @@ func (bi *BankItem) String() string {
 	var builder strings.Builder
 	builder.WriteString("BankItem(")
 	builder.WriteString(fmt.Sprintf("id=%v", bi.ID))
+	builder.WriteString(", itemID=")
+	builder.WriteString(bi.ItemID)
+	builder.WriteString(", quantity=")
+	builder.WriteString(fmt.Sprintf("%v", bi.Quantity))
 	builder.WriteByte(')')
 	return builder.String()
 }

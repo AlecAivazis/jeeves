@@ -220,6 +220,19 @@ func (biq *BankItemQuery) Clone() *BankItemQuery {
 
 // GroupBy used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		ItemID string `json:"itemID,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.BankItem.Query().
+//		GroupBy(bankitem.FieldItemID).
+//		Aggregate(db.Count()).
+//		Scan(ctx, &v)
+//
 func (biq *BankItemQuery) GroupBy(field string, fields ...string) *BankItemGroupBy {
 	group := &BankItemGroupBy{config: biq.config}
 	group.fields = append([]string{field}, fields...)
@@ -228,6 +241,17 @@ func (biq *BankItemQuery) GroupBy(field string, fields ...string) *BankItemGroup
 }
 
 // Select one or more fields from the given query.
+//
+// Example:
+//
+//	var v []struct {
+//		ItemID string `json:"itemID,omitempty"`
+//	}
+//
+//	client.BankItem.Query().
+//		Select(bankitem.FieldItemID).
+//		Scan(ctx, &v)
+//
 func (biq *BankItemQuery) Select(field string, fields ...string) *BankItemSelect {
 	selector := &BankItemSelect{config: biq.config}
 	selector.fields = append([]string{field}, fields...)
