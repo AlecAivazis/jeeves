@@ -13,7 +13,7 @@ func main() {
 	// if there is no token
 	if BotToken == "" {
 		// tell the user what happened
-		fmt.Println("Please provide a token through the $TOKEN environment variable")
+		fmt.Println("Please provide a token via the TOKEN environment variable")
 		// don't continue
 		os.Exit(1)
 		return
