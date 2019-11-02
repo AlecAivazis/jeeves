@@ -4,9 +4,11 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/AlecAivazis/jeeves/db/bankitem"
+	"github.com/AlecAivazis/jeeves/db/guild"
 	"github.com/AlecAivazis/jeeves/db/predicate"
 	"github.com/facebookincubator/ent/dialect/sql"
 )
@@ -14,10 +16,12 @@ import (
 // BankItemUpdate is the builder for updating BankItem entities.
 type BankItemUpdate struct {
 	config
-	itemID      *string
-	quantity    *int
-	addquantity *int
-	predicates  []predicate.BankItem
+	itemID       *string
+	quantity     *int
+	addquantity  *int
+	guild        map[int]struct{}
+	clearedGuild bool
+	predicates   []predicate.BankItem
 }
 
 // Where adds a new predicate for the builder.
@@ -49,12 +53,43 @@ func (biu *BankItemUpdate) AddQuantity(i int) *BankItemUpdate {
 	return biu
 }
 
+// SetGuildID sets the guild edge to Guild by id.
+func (biu *BankItemUpdate) SetGuildID(id int) *BankItemUpdate {
+	if biu.guild == nil {
+		biu.guild = make(map[int]struct{})
+	}
+	biu.guild[id] = struct{}{}
+	return biu
+}
+
+// SetNillableGuildID sets the guild edge to Guild by id if the given value is not nil.
+func (biu *BankItemUpdate) SetNillableGuildID(id *int) *BankItemUpdate {
+	if id != nil {
+		biu = biu.SetGuildID(*id)
+	}
+	return biu
+}
+
+// SetGuild sets the guild edge to Guild.
+func (biu *BankItemUpdate) SetGuild(g *Guild) *BankItemUpdate {
+	return biu.SetGuildID(g.ID)
+}
+
+// ClearGuild clears the guild edge to Guild.
+func (biu *BankItemUpdate) ClearGuild() *BankItemUpdate {
+	biu.clearedGuild = true
+	return biu
+}
+
 // Save executes the query and returns the number of rows/vertices matched by this operation.
 func (biu *BankItemUpdate) Save(ctx context.Context) (int, error) {
 	if biu.quantity != nil {
 		if err := bankitem.QuantityValidator(*biu.quantity); err != nil {
 			return 0, fmt.Errorf("db: validator failed for field \"quantity\": %v", err)
 		}
+	}
+	if len(biu.guild) > 1 {
+		return 0, errors.New("db: multiple assignments on a unique edge \"guild\"")
 	}
 	return biu.sqlSave(ctx)
 }
@@ -130,6 +165,26 @@ func (biu *BankItemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			return 0, rollback(tx, err)
 		}
 	}
+	if biu.clearedGuild {
+		query, args := builder.Update(bankitem.GuildTable).
+			SetNull(bankitem.GuildColumn).
+			Where(sql.InInts(guild.FieldID, ids...)).
+			Query()
+		if err := tx.Exec(ctx, query, args, &res); err != nil {
+			return 0, rollback(tx, err)
+		}
+	}
+	if len(biu.guild) > 0 {
+		for eid := range biu.guild {
+			query, args := builder.Update(bankitem.GuildTable).
+				Set(bankitem.GuildColumn, eid).
+				Where(sql.InInts(bankitem.FieldID, ids...)).
+				Query()
+			if err := tx.Exec(ctx, query, args, &res); err != nil {
+				return 0, rollback(tx, err)
+			}
+		}
+	}
 	if err = tx.Commit(); err != nil {
 		return 0, err
 	}
@@ -139,10 +194,12 @@ func (biu *BankItemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // BankItemUpdateOne is the builder for updating a single BankItem entity.
 type BankItemUpdateOne struct {
 	config
-	id          int
-	itemID      *string
-	quantity    *int
-	addquantity *int
+	id           int
+	itemID       *string
+	quantity     *int
+	addquantity  *int
+	guild        map[int]struct{}
+	clearedGuild bool
 }
 
 // SetItemID sets the itemID field.
@@ -168,12 +225,43 @@ func (biuo *BankItemUpdateOne) AddQuantity(i int) *BankItemUpdateOne {
 	return biuo
 }
 
+// SetGuildID sets the guild edge to Guild by id.
+func (biuo *BankItemUpdateOne) SetGuildID(id int) *BankItemUpdateOne {
+	if biuo.guild == nil {
+		biuo.guild = make(map[int]struct{})
+	}
+	biuo.guild[id] = struct{}{}
+	return biuo
+}
+
+// SetNillableGuildID sets the guild edge to Guild by id if the given value is not nil.
+func (biuo *BankItemUpdateOne) SetNillableGuildID(id *int) *BankItemUpdateOne {
+	if id != nil {
+		biuo = biuo.SetGuildID(*id)
+	}
+	return biuo
+}
+
+// SetGuild sets the guild edge to Guild.
+func (biuo *BankItemUpdateOne) SetGuild(g *Guild) *BankItemUpdateOne {
+	return biuo.SetGuildID(g.ID)
+}
+
+// ClearGuild clears the guild edge to Guild.
+func (biuo *BankItemUpdateOne) ClearGuild() *BankItemUpdateOne {
+	biuo.clearedGuild = true
+	return biuo
+}
+
 // Save executes the query and returns the updated entity.
 func (biuo *BankItemUpdateOne) Save(ctx context.Context) (*BankItem, error) {
 	if biuo.quantity != nil {
 		if err := bankitem.QuantityValidator(*biuo.quantity); err != nil {
 			return nil, fmt.Errorf("db: validator failed for field \"quantity\": %v", err)
 		}
+	}
+	if len(biuo.guild) > 1 {
+		return nil, errors.New("db: multiple assignments on a unique edge \"guild\"")
 	}
 	return biuo.sqlSave(ctx)
 }
@@ -253,6 +341,26 @@ func (biuo *BankItemUpdateOne) sqlSave(ctx context.Context) (bi *BankItem, err e
 		query, args := updater.Query()
 		if err := tx.Exec(ctx, query, args, &res); err != nil {
 			return nil, rollback(tx, err)
+		}
+	}
+	if biuo.clearedGuild {
+		query, args := builder.Update(bankitem.GuildTable).
+			SetNull(bankitem.GuildColumn).
+			Where(sql.InInts(guild.FieldID, ids...)).
+			Query()
+		if err := tx.Exec(ctx, query, args, &res); err != nil {
+			return nil, rollback(tx, err)
+		}
+	}
+	if len(biuo.guild) > 0 {
+		for eid := range biuo.guild {
+			query, args := builder.Update(bankitem.GuildTable).
+				Set(bankitem.GuildColumn, eid).
+				Where(sql.InInts(bankitem.FieldID, ids...)).
+				Query()
+			if err := tx.Exec(ctx, query, args, &res); err != nil {
+				return nil, rollback(tx, err)
+			}
 		}
 	}
 	if err = tx.Commit(); err != nil {

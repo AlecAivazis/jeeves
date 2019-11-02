@@ -41,6 +41,11 @@ func (bi *BankItem) FromRows(rows *sql.Rows) error {
 	return nil
 }
 
+// QueryGuild queries the guild edge of the BankItem.
+func (bi *BankItem) QueryGuild() *GuildQuery {
+	return (&BankItemClient{bi.config}).QueryGuild(bi)
+}
+
 // Update returns a builder for updating this BankItem.
 // Note that, you need to call BankItem.Unwrap() before calling this method, if this BankItem
 // was returned from a transaction, and the transaction was committed or rolled back.

@@ -6,6 +6,6 @@ import (
 
 // BankHandler is invoked on every message that is sent to a channel the
 // bot is authenticated with
-func BankHandler(session *discordgo.Session, message *discordgo.MessageCreate) {
+func (b *JeevesBot) BankHandler(session *discordgo.Session, message *discordgo.MessageCreate) {
 
 }

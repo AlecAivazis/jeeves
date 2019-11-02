@@ -9,6 +9,7 @@ import (
 	"math"
 
 	"github.com/AlecAivazis/jeeves/db/bankitem"
+	"github.com/AlecAivazis/jeeves/db/guild"
 	"github.com/AlecAivazis/jeeves/db/predicate"
 	"github.com/facebookincubator/ent/dialect/sql"
 )
@@ -47,6 +48,21 @@ func (biq *BankItemQuery) Offset(offset int) *BankItemQuery {
 func (biq *BankItemQuery) Order(o ...Order) *BankItemQuery {
 	biq.order = append(biq.order, o...)
 	return biq
+}
+
+// QueryGuild chains the current query on the guild edge.
+func (biq *BankItemQuery) QueryGuild() *GuildQuery {
+	query := &GuildQuery{config: biq.config}
+
+	builder := sql.Dialect(biq.driver.Dialect())
+	t1 := builder.Table(guild.Table)
+	t2 := biq.sqlQuery()
+	t2.Select(t2.C(bankitem.GuildColumn))
+	query.sql = builder.Select(t1.Columns(guild.Columns...)...).
+		From(t1).
+		Join(t2).
+		On(t1.C(guild.FieldID), t2.C(bankitem.GuildColumn))
+	return query
 }
 
 // First returns the first BankItem entity in the query. Returns *ErrNotFound when no bankitem was found.

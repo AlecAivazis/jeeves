@@ -10,6 +10,8 @@ import (
 	"github.com/AlecAivazis/jeeves/db/migrate"
 
 	"github.com/AlecAivazis/jeeves/db/bankitem"
+	"github.com/AlecAivazis/jeeves/db/guild"
+	"github.com/AlecAivazis/jeeves/db/guildchannel"
 
 	"github.com/facebookincubator/ent/dialect"
 	"github.com/facebookincubator/ent/dialect/sql"
@@ -22,6 +24,10 @@ type Client struct {
 	Schema *migrate.Schema
 	// BankItem is the client for interacting with the BankItem builders.
 	BankItem *BankItemClient
+	// Guild is the client for interacting with the Guild builders.
+	Guild *GuildClient
+	// GuildChannel is the client for interacting with the GuildChannel builders.
+	GuildChannel *GuildChannelClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -29,9 +35,11 @@ func NewClient(opts ...Option) *Client {
 	c := config{log: log.Println}
 	c.options(opts...)
 	return &Client{
-		config:   c,
-		Schema:   migrate.NewSchema(c.driver),
-		BankItem: NewBankItemClient(c),
+		config:       c,
+		Schema:       migrate.NewSchema(c.driver),
+		BankItem:     NewBankItemClient(c),
+		Guild:        NewGuildClient(c),
+		GuildChannel: NewGuildChannelClient(c),
 	}
 }
 
@@ -63,8 +71,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	}
 	cfg := config{driver: tx, log: c.log, debug: c.debug}
 	return &Tx{
-		config:   cfg,
-		BankItem: NewBankItemClient(cfg),
+		config:       cfg,
+		BankItem:     NewBankItemClient(cfg),
+		Guild:        NewGuildClient(cfg),
+		GuildChannel: NewGuildChannelClient(cfg),
 	}, nil
 }
 
@@ -81,9 +91,11 @@ func (c *Client) Debug() *Client {
 	}
 	cfg := config{driver: dialect.Debug(c.driver, c.log), log: c.log, debug: true}
 	return &Client{
-		config:   cfg,
-		Schema:   migrate.NewSchema(cfg.driver),
-		BankItem: NewBankItemClient(cfg),
+		config:       cfg,
+		Schema:       migrate.NewSchema(cfg.driver),
+		BankItem:     NewBankItemClient(cfg),
+		Guild:        NewGuildClient(cfg),
+		GuildChannel: NewGuildChannelClient(cfg),
 	}
 }
 
@@ -154,4 +166,182 @@ func (c *BankItemClient) GetX(ctx context.Context, id int) *BankItem {
 		panic(err)
 	}
 	return bi
+}
+
+// QueryGuild queries the guild edge of a BankItem.
+func (c *BankItemClient) QueryGuild(bi *BankItem) *GuildQuery {
+	query := &GuildQuery{config: c.config}
+	id := bi.ID
+	builder := sql.Dialect(bi.driver.Dialect())
+	t1 := builder.Table(guild.Table)
+	t2 := builder.Select(bankitem.GuildColumn).
+		From(builder.Table(bankitem.GuildTable)).
+		Where(sql.EQ(bankitem.FieldID, id))
+	query.sql = builder.Select().From(t1).Join(t2).On(t1.C(guild.FieldID), t2.C(bankitem.GuildColumn))
+
+	return query
+}
+
+// GuildClient is a client for the Guild schema.
+type GuildClient struct {
+	config
+}
+
+// NewGuildClient returns a client for the Guild from the given config.
+func NewGuildClient(c config) *GuildClient {
+	return &GuildClient{config: c}
+}
+
+// Create returns a create builder for Guild.
+func (c *GuildClient) Create() *GuildCreate {
+	return &GuildCreate{config: c.config}
+}
+
+// Update returns an update builder for Guild.
+func (c *GuildClient) Update() *GuildUpdate {
+	return &GuildUpdate{config: c.config}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GuildClient) UpdateOne(gu *Guild) *GuildUpdateOne {
+	return c.UpdateOneID(gu.ID)
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GuildClient) UpdateOneID(id int) *GuildUpdateOne {
+	return &GuildUpdateOne{config: c.config, id: id}
+}
+
+// Delete returns a delete builder for Guild.
+func (c *GuildClient) Delete() *GuildDelete {
+	return &GuildDelete{config: c.config}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *GuildClient) DeleteOne(gu *Guild) *GuildDeleteOne {
+	return c.DeleteOneID(gu.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *GuildClient) DeleteOneID(id int) *GuildDeleteOne {
+	return &GuildDeleteOne{c.Delete().Where(guild.ID(id))}
+}
+
+// Create returns a query builder for Guild.
+func (c *GuildClient) Query() *GuildQuery {
+	return &GuildQuery{config: c.config}
+}
+
+// Get returns a Guild entity by its id.
+func (c *GuildClient) Get(ctx context.Context, id int) (*Guild, error) {
+	return c.Query().Where(guild.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GuildClient) GetX(ctx context.Context, id int) *Guild {
+	gu, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return gu
+}
+
+// QueryChannels queries the channels edge of a Guild.
+func (c *GuildClient) QueryChannels(gu *Guild) *GuildChannelQuery {
+	query := &GuildChannelQuery{config: c.config}
+	id := gu.ID
+	builder := sql.Dialect(gu.driver.Dialect())
+	query.sql = builder.Select().From(builder.Table(guildchannel.Table)).
+		Where(sql.EQ(guild.ChannelsColumn, id))
+
+	return query
+}
+
+// QueryBank queries the bank edge of a Guild.
+func (c *GuildClient) QueryBank(gu *Guild) *BankItemQuery {
+	query := &BankItemQuery{config: c.config}
+	id := gu.ID
+	builder := sql.Dialect(gu.driver.Dialect())
+	query.sql = builder.Select().From(builder.Table(bankitem.Table)).
+		Where(sql.EQ(guild.BankColumn, id))
+
+	return query
+}
+
+// GuildChannelClient is a client for the GuildChannel schema.
+type GuildChannelClient struct {
+	config
+}
+
+// NewGuildChannelClient returns a client for the GuildChannel from the given config.
+func NewGuildChannelClient(c config) *GuildChannelClient {
+	return &GuildChannelClient{config: c}
+}
+
+// Create returns a create builder for GuildChannel.
+func (c *GuildChannelClient) Create() *GuildChannelCreate {
+	return &GuildChannelCreate{config: c.config}
+}
+
+// Update returns an update builder for GuildChannel.
+func (c *GuildChannelClient) Update() *GuildChannelUpdate {
+	return &GuildChannelUpdate{config: c.config}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GuildChannelClient) UpdateOne(gc *GuildChannel) *GuildChannelUpdateOne {
+	return c.UpdateOneID(gc.ID)
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GuildChannelClient) UpdateOneID(id int) *GuildChannelUpdateOne {
+	return &GuildChannelUpdateOne{config: c.config, id: id}
+}
+
+// Delete returns a delete builder for GuildChannel.
+func (c *GuildChannelClient) Delete() *GuildChannelDelete {
+	return &GuildChannelDelete{config: c.config}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *GuildChannelClient) DeleteOne(gc *GuildChannel) *GuildChannelDeleteOne {
+	return c.DeleteOneID(gc.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *GuildChannelClient) DeleteOneID(id int) *GuildChannelDeleteOne {
+	return &GuildChannelDeleteOne{c.Delete().Where(guildchannel.ID(id))}
+}
+
+// Create returns a query builder for GuildChannel.
+func (c *GuildChannelClient) Query() *GuildChannelQuery {
+	return &GuildChannelQuery{config: c.config}
+}
+
+// Get returns a GuildChannel entity by its id.
+func (c *GuildChannelClient) Get(ctx context.Context, id int) (*GuildChannel, error) {
+	return c.Query().Where(guildchannel.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GuildChannelClient) GetX(ctx context.Context, id int) *GuildChannel {
+	gc, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return gc
+}
+
+// QueryGuild queries the guild edge of a GuildChannel.
+func (c *GuildChannelClient) QueryGuild(gc *GuildChannel) *GuildQuery {
+	query := &GuildQuery{config: c.config}
+	id := gc.ID
+	builder := sql.Dialect(gc.driver.Dialect())
+	t1 := builder.Table(guild.Table)
+	t2 := builder.Select(guildchannel.GuildColumn).
+		From(builder.Table(guildchannel.GuildTable)).
+		Where(sql.EQ(guildchannel.FieldID, id))
+	query.sql = builder.Select().From(t1).Join(t2).On(t1.C(guild.FieldID), t2.C(guildchannel.GuildColumn))
+
+	return query
 }

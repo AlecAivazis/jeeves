@@ -40,3 +40,75 @@ func ExampleBankItem() {
 
 	// Output:
 }
+func ExampleGuild() {
+	if dsn == "" {
+		return
+	}
+	ctx := context.Background()
+	drv, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatalf("failed creating database client: %v", err)
+	}
+	defer drv.Close()
+	client := NewClient(Driver(drv))
+	// creating vertices for the guild's edges.
+	gc0 := client.GuildChannel.
+		Create().
+		SetChannel("string").
+		SaveX(ctx)
+	log.Println("guildchannel created:", gc0)
+	bi1 := client.BankItem.
+		Create().
+		SetItemID("string").
+		SetQuantity(1).
+		SaveX(ctx)
+	log.Println("bankitem created:", bi1)
+
+	// create guild vertex with its edges.
+	gu := client.Guild.
+		Create().
+		SetID("string").
+		AddChannels(gc0).
+		AddBank(bi1).
+		SaveX(ctx)
+	log.Println("guild created:", gu)
+
+	// query edges.
+	gc0, err = gu.QueryChannels().First(ctx)
+	if err != nil {
+		log.Fatalf("failed querying channels: %v", err)
+	}
+	log.Println("channels found:", gc0)
+
+	bi1, err = gu.QueryBank().First(ctx)
+	if err != nil {
+		log.Fatalf("failed querying bank: %v", err)
+	}
+	log.Println("bank found:", bi1)
+
+	// Output:
+}
+func ExampleGuildChannel() {
+	if dsn == "" {
+		return
+	}
+	ctx := context.Background()
+	drv, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatalf("failed creating database client: %v", err)
+	}
+	defer drv.Close()
+	client := NewClient(Driver(drv))
+	// creating vertices for the guildchannel's edges.
+
+	// create guildchannel vertex with its edges.
+	gc := client.GuildChannel.
+		Create().
+		SetChannel("string").
+		SaveX(ctx)
+	log.Println("guildchannel created:", gc)
+
+	// query edges.
+
+	// Output:
+}

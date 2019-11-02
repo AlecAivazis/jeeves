@@ -8,3 +8,9 @@ import (
 
 // BankItem is the predicate function for bankitem builders.
 type BankItem func(*sql.Selector)
+
+// Guild is the predicate function for guild builders.
+type Guild func(*sql.Selector)
+
+// GuildChannel is the predicate function for guildchannel builders.
+type GuildChannel func(*sql.Selector)

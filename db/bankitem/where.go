@@ -355,6 +355,31 @@ func QuantityLTE(v int) predicate.BankItem {
 	)
 }
 
+// HasGuild applies the HasEdge predicate on the "guild" edge.
+func HasGuild() predicate.BankItem {
+	return predicate.BankItem(
+		func(s *sql.Selector) {
+			t1 := s.Table()
+			s.Where(sql.NotNull(t1.C(GuildColumn)))
+		},
+	)
+}
+
+// HasGuildWith applies the HasEdge predicate on the "guild" edge with a given conditions (other predicates).
+func HasGuildWith(preds ...predicate.Guild) predicate.BankItem {
+	return predicate.BankItem(
+		func(s *sql.Selector) {
+			builder := sql.Dialect(s.Dialect())
+			t1 := s.Table()
+			t2 := builder.Select(FieldID).From(builder.Table(GuildInverseTable))
+			for _, p := range preds {
+				p(t2)
+			}
+			s.Where(sql.In(t1.C(GuildColumn), t2))
+		},
+	)
+}
+
 // And groups list of predicates with the AND operator between them.
 func And(predicates ...predicate.BankItem) predicate.BankItem {
 	return predicate.BankItem(

@@ -7,7 +7,14 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/AlecAivazis/jeeves/db"
 )
+
+// JeevesBot provides context for the discord handlers
+type JeevesBot struct {
+	Client *db.Client
+}
 
 func main() {
 	// if there is no token
@@ -28,9 +35,22 @@ func main() {
 	// make sure we close the bot when we're done
 	defer dg.Close()
 
+	// open up a client with the configured values
+	client, err := db.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", DBHost, DBPort, DBUser, DBPassword, DBName))
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	// instantiate the bot
+	bot := &JeevesBot{
+		Client: client,
+	}
+
 	// add the various handlers
-	dg.AddHandler(RegisterChannels)
-	dg.AddHandler(BankHandler)
+	dg.AddHandler(bot.RegisterChannels)
+	dg.AddHandler(bot.BankHandler)
+	dg.AddHandler(bot.NewGuild)
 
 	// wait for some kind of signal to stop
 	fmt.Println("Jeeves is now running. Press ctrl+c to exit")

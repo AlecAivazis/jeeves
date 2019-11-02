@@ -18,6 +18,13 @@ const (
 
 	// Table holds the table name of the bankitem in the database.
 	Table = "bank_items"
+	// GuildTable is the table the holds the guild relation/edge.
+	GuildTable = "bank_items"
+	// GuildInverseTable is the table name for the Guild entity.
+	// It exists in this package in order to avoid circular dependency with the "guild" package.
+	GuildInverseTable = "guilds"
+	// GuildColumn is the table column denoting the guild relation/edge.
+	GuildColumn = "guild_id"
 )
 
 // Columns holds all SQL columns are bankitem fields.

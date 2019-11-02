@@ -3,6 +3,7 @@ package schema
 import (
 	"github.com/facebookincubator/ent"
 	"github.com/facebookincubator/ent/schema/field"
+	"github.com/facebookincubator/ent/schema/edge"
 )
 
 // BankItem holds the schema definition for the BankItem entity.
@@ -20,5 +21,7 @@ func (BankItem) Fields() []ent.Field {
 
 // Edges of the BankItem.
 func (BankItem) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("guild", Guild.Type).Ref("bank").Unique(),
+	}
 }

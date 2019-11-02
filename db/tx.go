@@ -14,6 +14,10 @@ type Tx struct {
 	config
 	// BankItem is the client for interacting with the BankItem builders.
 	BankItem *BankItemClient
+	// Guild is the client for interacting with the Guild builders.
+	Guild *GuildClient
+	// GuildChannel is the client for interacting with the GuildChannel builders.
+	GuildChannel *GuildChannelClient
 }
 
 // Commit commits the transaction.
@@ -29,9 +33,11 @@ func (tx *Tx) Rollback() error {
 // Client returns a Client that binds to current transaction.
 func (tx *Tx) Client() *Client {
 	return &Client{
-		config:   tx.config,
-		Schema:   migrate.NewSchema(tx.driver),
-		BankItem: NewBankItemClient(tx.config),
+		config:       tx.config,
+		Schema:       migrate.NewSchema(tx.driver),
+		BankItem:     NewBankItemClient(tx.config),
+		Guild:        NewGuildClient(tx.config),
+		GuildChannel: NewGuildChannelClient(tx.config),
 	}
 }
 
