@@ -14,25 +14,25 @@ type Guild struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// ID holds the value of the "id" field.
-	ID string `json:"id,omitempty"`
+	// DiscordID holds the value of the "discordID" field.
+	DiscordID string `json:"discordID,omitempty"`
 }
 
 // FromRows scans the sql response data into Guild.
 func (gu *Guild) FromRows(rows *sql.Rows) error {
 	var vgu struct {
-		ID int
-		ID sql.NullString
+		ID        int
+		DiscordID sql.NullString
 	}
 	// the order here should be the same as in the `guild.Columns`.
 	if err := rows.Scan(
 		&vgu.ID,
-		&vgu.ID,
+		&vgu.DiscordID,
 	); err != nil {
 		return err
 	}
 	gu.ID = vgu.ID
-	gu.ID = vgu.ID.String
+	gu.DiscordID = vgu.DiscordID.String
 	return nil
 }
 
@@ -69,8 +69,8 @@ func (gu *Guild) String() string {
 	var builder strings.Builder
 	builder.WriteString("Guild(")
 	builder.WriteString(fmt.Sprintf("id=%v", gu.ID))
-	builder.WriteString(", id=")
-	builder.WriteString(gu.ID)
+	builder.WriteString(", discordID=")
+	builder.WriteString(gu.DiscordID)
 	builder.WriteByte(')')
 	return builder.String()
 }

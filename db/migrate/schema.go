@@ -25,7 +25,7 @@ var (
 				Symbol:  "bank_items_guilds_bank",
 				Columns: []*schema.Column{BankItemsColumns[3]},
 
-				RefColumns: []*schema.Column{GuildsColumns[0], GuildsColumns[1]},
+				RefColumns: []*schema.Column{GuildsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -33,19 +33,20 @@ var (
 	// GuildsColumns holds the columns for the "guilds" table.
 	GuildsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "id", Type: field.TypeInt, Unique: true, Increment: true},
+		{Name: "discord_id", Type: field.TypeString, Unique: true},
 	}
 	// GuildsTable holds the schema information for the "guilds" table.
 	GuildsTable = &schema.Table{
 		Name:        "guilds",
 		Columns:     GuildsColumns,
-		PrimaryKey:  []*schema.Column{GuildsColumns[0], GuildsColumns[1]},
+		PrimaryKey:  []*schema.Column{GuildsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
 	// GuildChannelsColumns holds the columns for the "guild_channels" table.
 	GuildChannelsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "channel", Type: field.TypeString},
+		{Name: "role", Type: field.TypeString},
 		{Name: "guild_id", Type: field.TypeInt, Nullable: true},
 	}
 	// GuildChannelsTable holds the schema information for the "guild_channels" table.
@@ -56,9 +57,9 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:  "guild_channels_guilds_channels",
-				Columns: []*schema.Column{GuildChannelsColumns[2]},
+				Columns: []*schema.Column{GuildChannelsColumns[3]},
 
-				RefColumns: []*schema.Column{GuildsColumns[0], GuildsColumns[1]},
+				RefColumns: []*schema.Column{GuildsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},

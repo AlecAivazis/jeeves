@@ -16,6 +16,8 @@ type GuildChannel struct {
 	ID int `json:"id,omitempty"`
 	// Channel holds the value of the "channel" field.
 	Channel string `json:"channel,omitempty"`
+	// Role holds the value of the "role" field.
+	Role string `json:"role,omitempty"`
 }
 
 // FromRows scans the sql response data into GuildChannel.
@@ -23,16 +25,19 @@ func (gc *GuildChannel) FromRows(rows *sql.Rows) error {
 	var vgc struct {
 		ID      int
 		Channel sql.NullString
+		Role    sql.NullString
 	}
 	// the order here should be the same as in the `guildchannel.Columns`.
 	if err := rows.Scan(
 		&vgc.ID,
 		&vgc.Channel,
+		&vgc.Role,
 	); err != nil {
 		return err
 	}
 	gc.ID = vgc.ID
 	gc.Channel = vgc.Channel.String
+	gc.Role = vgc.Role.String
 	return nil
 }
 
@@ -66,6 +71,8 @@ func (gc *GuildChannel) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v", gc.ID))
 	builder.WriteString(", channel=")
 	builder.WriteString(gc.Channel)
+	builder.WriteString(", role=")
+	builder.WriteString(gc.Role)
 	builder.WriteByte(')')
 	return builder.String()
 }

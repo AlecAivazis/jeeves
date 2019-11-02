@@ -256,12 +256,12 @@ func (gq *GuildQuery) Clone() *GuildQuery {
 // Example:
 //
 //	var v []struct {
-//		ID string `json:"id,omitempty"`
+//		DiscordID string `json:"discordID,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Guild.Query().
-//		GroupBy(guild.FieldID).
+//		GroupBy(guild.FieldDiscordID).
 //		Aggregate(db.Count()).
 //		Scan(ctx, &v)
 //
@@ -277,11 +277,11 @@ func (gq *GuildQuery) GroupBy(field string, fields ...string) *GuildGroupBy {
 // Example:
 //
 //	var v []struct {
-//		ID string `json:"id,omitempty"`
+//		DiscordID string `json:"discordID,omitempty"`
 //	}
 //
 //	client.Guild.Query().
-//		Select(guild.FieldID).
+//		Select(guild.FieldDiscordID).
 //		Scan(ctx, &v)
 //
 func (gq *GuildQuery) Select(field string, fields ...string) *GuildSelect {

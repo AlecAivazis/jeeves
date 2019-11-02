@@ -16,14 +16,14 @@ import (
 // GuildCreate is the builder for creating a Guild entity.
 type GuildCreate struct {
 	config
-	id       *string
-	channels map[int]struct{}
-	bank     map[int]struct{}
+	discordID *string
+	channels  map[int]struct{}
+	bank      map[int]struct{}
 }
 
-// SetID sets the id field.
-func (gc *GuildCreate) SetID(s string) *GuildCreate {
-	gc.id = &s
+// SetDiscordID sets the discordID field.
+func (gc *GuildCreate) SetDiscordID(s string) *GuildCreate {
+	gc.discordID = &s
 	return gc
 }
 
@@ -69,8 +69,8 @@ func (gc *GuildCreate) AddBank(b ...*BankItem) *GuildCreate {
 
 // Save creates the Guild in the database.
 func (gc *GuildCreate) Save(ctx context.Context) (*Guild, error) {
-	if gc.id == nil {
-		return nil, errors.New("db: missing required field \"id\"")
+	if gc.discordID == nil {
+		return nil, errors.New("db: missing required field \"discordID\"")
 	}
 	return gc.sqlSave(ctx)
 }
@@ -95,9 +95,9 @@ func (gc *GuildCreate) sqlSave(ctx context.Context) (*Guild, error) {
 		return nil, err
 	}
 	insert := builder.Insert(guild.Table).Default()
-	if value := gc.id; value != nil {
-		insert.Set(guild.FieldID, *value)
-		gu.ID = *value
+	if value := gc.discordID; value != nil {
+		insert.Set(guild.FieldDiscordID, *value)
+		gu.DiscordID = *value
 	}
 	id, err := insertLastID(ctx, tx, insert.Returning(guild.FieldID))
 	if err != nil {

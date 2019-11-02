@@ -14,12 +14,19 @@ import (
 type GuildChannelCreate struct {
 	config
 	channel *string
+	role    *string
 	guild   map[int]struct{}
 }
 
 // SetChannel sets the channel field.
 func (gcc *GuildChannelCreate) SetChannel(s string) *GuildChannelCreate {
 	gcc.channel = &s
+	return gcc
+}
+
+// SetRole sets the role field.
+func (gcc *GuildChannelCreate) SetRole(s string) *GuildChannelCreate {
+	gcc.role = &s
 	return gcc
 }
 
@@ -50,6 +57,9 @@ func (gcc *GuildChannelCreate) Save(ctx context.Context) (*GuildChannel, error) 
 	if gcc.channel == nil {
 		return nil, errors.New("db: missing required field \"channel\"")
 	}
+	if gcc.role == nil {
+		return nil, errors.New("db: missing required field \"role\"")
+	}
 	if len(gcc.guild) > 1 {
 		return nil, errors.New("db: multiple assignments on a unique edge \"guild\"")
 	}
@@ -79,6 +89,10 @@ func (gcc *GuildChannelCreate) sqlSave(ctx context.Context) (*GuildChannel, erro
 	if value := gcc.channel; value != nil {
 		insert.Set(guildchannel.FieldChannel, *value)
 		gc.Channel = *value
+	}
+	if value := gcc.role; value != nil {
+		insert.Set(guildchannel.FieldRole, *value)
+		gc.Role = *value
 	}
 	id, err := insertLastID(ctx, tx, insert.Returning(guildchannel.FieldID))
 	if err != nil {

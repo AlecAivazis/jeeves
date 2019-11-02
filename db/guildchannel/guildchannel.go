@@ -9,6 +9,8 @@ const (
 	FieldID = "id"
 	// FieldChannel holds the string denoting the channel vertex property in the database.
 	FieldChannel = "channel"
+	// FieldRole holds the string denoting the role vertex property in the database.
+	FieldRole = "role"
 
 	// Table holds the table name of the guildchannel in the database.
 	Table = "guild_channels"
@@ -25,4 +27,5 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldChannel,
+	FieldRole,
 }

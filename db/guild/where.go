@@ -108,35 +108,35 @@ func IDLTE(id int) predicate.Guild {
 	)
 }
 
-// ID applies equality check predicate on the "id" field. It's identical to IDEQ.
-func ID(v string) predicate.Guild {
+// DiscordID applies equality check predicate on the "discordID" field. It's identical to DiscordIDEQ.
+func DiscordID(v string) predicate.Guild {
 	return predicate.Guild(
 		func(s *sql.Selector) {
-			s.Where(sql.EQ(s.C(FieldID), v))
+			s.Where(sql.EQ(s.C(FieldDiscordID), v))
 		},
 	)
 }
 
-// IDEQ applies the EQ predicate on the "id" field.
-func IDEQ(v string) predicate.Guild {
+// DiscordIDEQ applies the EQ predicate on the "discordID" field.
+func DiscordIDEQ(v string) predicate.Guild {
 	return predicate.Guild(
 		func(s *sql.Selector) {
-			s.Where(sql.EQ(s.C(FieldID), v))
+			s.Where(sql.EQ(s.C(FieldDiscordID), v))
 		},
 	)
 }
 
-// IDNEQ applies the NEQ predicate on the "id" field.
-func IDNEQ(v string) predicate.Guild {
+// DiscordIDNEQ applies the NEQ predicate on the "discordID" field.
+func DiscordIDNEQ(v string) predicate.Guild {
 	return predicate.Guild(
 		func(s *sql.Selector) {
-			s.Where(sql.NEQ(s.C(FieldID), v))
+			s.Where(sql.NEQ(s.C(FieldDiscordID), v))
 		},
 	)
 }
 
-// IDIn applies the In predicate on the "id" field.
-func IDIn(vs ...string) predicate.Guild {
+// DiscordIDIn applies the In predicate on the "discordID" field.
+func DiscordIDIn(vs ...string) predicate.Guild {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -149,13 +149,13 @@ func IDIn(vs ...string) predicate.Guild {
 				s.Where(sql.False())
 				return
 			}
-			s.Where(sql.In(s.C(FieldID), v...))
+			s.Where(sql.In(s.C(FieldDiscordID), v...))
 		},
 	)
 }
 
-// IDNotIn applies the NotIn predicate on the "id" field.
-func IDNotIn(vs ...string) predicate.Guild {
+// DiscordIDNotIn applies the NotIn predicate on the "discordID" field.
+func DiscordIDNotIn(vs ...string) predicate.Guild {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -168,61 +168,88 @@ func IDNotIn(vs ...string) predicate.Guild {
 				s.Where(sql.False())
 				return
 			}
-			s.Where(sql.NotIn(s.C(FieldID), v...))
+			s.Where(sql.NotIn(s.C(FieldDiscordID), v...))
 		},
 	)
 }
 
-// IDGT applies the GT predicate on the "id" field.
-func IDGT(v string) predicate.Guild {
+// DiscordIDGT applies the GT predicate on the "discordID" field.
+func DiscordIDGT(v string) predicate.Guild {
 	return predicate.Guild(
 		func(s *sql.Selector) {
-			s.Where(sql.GT(s.C(FieldID), v))
+			s.Where(sql.GT(s.C(FieldDiscordID), v))
 		},
 	)
 }
 
-// IDGTE applies the GTE predicate on the "id" field.
-func IDGTE(v string) predicate.Guild {
+// DiscordIDGTE applies the GTE predicate on the "discordID" field.
+func DiscordIDGTE(v string) predicate.Guild {
 	return predicate.Guild(
 		func(s *sql.Selector) {
-			s.Where(sql.GTE(s.C(FieldID), v))
+			s.Where(sql.GTE(s.C(FieldDiscordID), v))
 		},
 	)
 }
 
-// IDLT applies the LT predicate on the "id" field.
-func IDLT(v string) predicate.Guild {
+// DiscordIDLT applies the LT predicate on the "discordID" field.
+func DiscordIDLT(v string) predicate.Guild {
 	return predicate.Guild(
 		func(s *sql.Selector) {
-			s.Where(sql.LT(s.C(FieldID), v))
+			s.Where(sql.LT(s.C(FieldDiscordID), v))
 		},
 	)
 }
 
-// IDLTE applies the LTE predicate on the "id" field.
-func IDLTE(v string) predicate.Guild {
+// DiscordIDLTE applies the LTE predicate on the "discordID" field.
+func DiscordIDLTE(v string) predicate.Guild {
 	return predicate.Guild(
 		func(s *sql.Selector) {
-			s.Where(sql.LTE(s.C(FieldID), v))
+			s.Where(sql.LTE(s.C(FieldDiscordID), v))
 		},
 	)
 }
 
-// IDEqualFold applies the EqualFold predicate on the "id" field.
-func IDEqualFold(v string) predicate.Guild {
+// DiscordIDContains applies the Contains predicate on the "discordID" field.
+func DiscordIDContains(v string) predicate.Guild {
 	return predicate.Guild(
 		func(s *sql.Selector) {
-			s.Where(sql.EqualFold(s.C(FieldID), v))
+			s.Where(sql.Contains(s.C(FieldDiscordID), v))
 		},
 	)
 }
 
-// IDContainsFold applies the ContainsFold predicate on the "id" field.
-func IDContainsFold(v string) predicate.Guild {
+// DiscordIDHasPrefix applies the HasPrefix predicate on the "discordID" field.
+func DiscordIDHasPrefix(v string) predicate.Guild {
 	return predicate.Guild(
 		func(s *sql.Selector) {
-			s.Where(sql.ContainsFold(s.C(FieldID), v))
+			s.Where(sql.HasPrefix(s.C(FieldDiscordID), v))
+		},
+	)
+}
+
+// DiscordIDHasSuffix applies the HasSuffix predicate on the "discordID" field.
+func DiscordIDHasSuffix(v string) predicate.Guild {
+	return predicate.Guild(
+		func(s *sql.Selector) {
+			s.Where(sql.HasSuffix(s.C(FieldDiscordID), v))
+		},
+	)
+}
+
+// DiscordIDEqualFold applies the EqualFold predicate on the "discordID" field.
+func DiscordIDEqualFold(v string) predicate.Guild {
+	return predicate.Guild(
+		func(s *sql.Selector) {
+			s.Where(sql.EqualFold(s.C(FieldDiscordID), v))
+		},
+	)
+}
+
+// DiscordIDContainsFold applies the ContainsFold predicate on the "discordID" field.
+func DiscordIDContainsFold(v string) predicate.Guild {
+	return predicate.Guild(
+		func(s *sql.Selector) {
+			s.Where(sql.ContainsFold(s.C(FieldDiscordID), v))
 		},
 	)
 }

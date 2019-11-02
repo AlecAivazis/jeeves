@@ -55,6 +55,7 @@ func ExampleGuild() {
 	gc0 := client.GuildChannel.
 		Create().
 		SetChannel("string").
+		SetRole("string").
 		SaveX(ctx)
 	log.Println("guildchannel created:", gc0)
 	bi1 := client.BankItem.
@@ -67,7 +68,7 @@ func ExampleGuild() {
 	// create guild vertex with its edges.
 	gu := client.Guild.
 		Create().
-		SetID("string").
+		SetDiscordID("string").
 		AddChannels(gc0).
 		AddBank(bi1).
 		SaveX(ctx)
@@ -105,6 +106,7 @@ func ExampleGuildChannel() {
 	gc := client.GuildChannel.
 		Create().
 		SetChannel("string").
+		SetRole("string").
 		SaveX(ctx)
 	log.Println("guildchannel created:", gc)
 

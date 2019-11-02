@@ -7,8 +7,8 @@ const (
 	Label = "guild"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldID holds the string denoting the id vertex property in the database.
-	FieldID = "id"
+	// FieldDiscordID holds the string denoting the discordid vertex property in the database.
+	FieldDiscordID = "discord_id"
 
 	// Table holds the table name of the guild in the database.
 	Table = "guilds"
@@ -31,5 +31,5 @@ const (
 // Columns holds all SQL columns are guild fields.
 var Columns = []string{
 	FieldID,
-	FieldID,
+	FieldDiscordID,
 }

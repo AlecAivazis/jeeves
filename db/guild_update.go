@@ -16,7 +16,7 @@ import (
 // GuildUpdate is the builder for updating Guild entities.
 type GuildUpdate struct {
 	config
-	id              *string
+	discordID       *string
 	channels        map[int]struct{}
 	bank            map[int]struct{}
 	removedChannels map[int]struct{}
@@ -30,9 +30,9 @@ func (gu *GuildUpdate) Where(ps ...predicate.Guild) *GuildUpdate {
 	return gu
 }
 
-// SetID sets the id field.
-func (gu *GuildUpdate) SetID(s string) *GuildUpdate {
-	gu.id = &s
+// SetDiscordID sets the discordID field.
+func (gu *GuildUpdate) SetDiscordID(s string) *GuildUpdate {
+	gu.discordID = &s
 	return gu
 }
 
@@ -177,8 +177,8 @@ func (gu *GuildUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		res     sql.Result
 		updater = builder.Update(guild.Table).Where(sql.InInts(guild.FieldID, ids...))
 	)
-	if value := gu.id; value != nil {
-		updater.Set(guild.FieldID, *value)
+	if value := gu.discordID; value != nil {
+		updater.Set(guild.FieldDiscordID, *value)
 	}
 	if !updater.Empty() {
 		query, args := updater.Query()
@@ -268,16 +268,16 @@ func (gu *GuildUpdate) sqlSave(ctx context.Context) (n int, err error) {
 type GuildUpdateOne struct {
 	config
 	id              int
-	id              *string
+	discordID       *string
 	channels        map[int]struct{}
 	bank            map[int]struct{}
 	removedChannels map[int]struct{}
 	removedBank     map[int]struct{}
 }
 
-// SetID sets the id field.
-func (guo *GuildUpdateOne) SetID(s string) *GuildUpdateOne {
-	guo.id = &s
+// SetDiscordID sets the discordID field.
+func (guo *GuildUpdateOne) SetDiscordID(s string) *GuildUpdateOne {
+	guo.discordID = &s
 	return guo
 }
 
@@ -425,9 +425,9 @@ func (guo *GuildUpdateOne) sqlSave(ctx context.Context) (gu *Guild, err error) {
 		res     sql.Result
 		updater = builder.Update(guild.Table).Where(sql.InInts(guild.FieldID, ids...))
 	)
-	if value := guo.id; value != nil {
-		updater.Set(guild.FieldID, *value)
-		gu.ID = *value
+	if value := guo.discordID; value != nil {
+		updater.Set(guild.FieldDiscordID, *value)
+		gu.DiscordID = *value
 	}
 	if !updater.Empty() {
 		query, args := updater.Query()

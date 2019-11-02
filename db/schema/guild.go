@@ -14,7 +14,7 @@ type Guild struct {
 // Fields of the Guild.
 func (Guild) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("id").Unique(),
+		field.String("discordID").Unique(),
 	}
 }
 

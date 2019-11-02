@@ -17,6 +17,7 @@ import (
 type GuildChannelUpdate struct {
 	config
 	channel      *string
+	role         *string
 	guild        map[int]struct{}
 	clearedGuild bool
 	predicates   []predicate.GuildChannel
@@ -31,6 +32,12 @@ func (gcu *GuildChannelUpdate) Where(ps ...predicate.GuildChannel) *GuildChannel
 // SetChannel sets the channel field.
 func (gcu *GuildChannelUpdate) SetChannel(s string) *GuildChannelUpdate {
 	gcu.channel = &s
+	return gcu
+}
+
+// SetRole sets the role field.
+func (gcu *GuildChannelUpdate) SetRole(s string) *GuildChannelUpdate {
+	gcu.role = &s
 	return gcu
 }
 
@@ -129,6 +136,9 @@ func (gcu *GuildChannelUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value := gcu.channel; value != nil {
 		updater.Set(guildchannel.FieldChannel, *value)
 	}
+	if value := gcu.role; value != nil {
+		updater.Set(guildchannel.FieldRole, *value)
+	}
 	if !updater.Empty() {
 		query, args := updater.Query()
 		if err := tx.Exec(ctx, query, args, &res); err != nil {
@@ -166,6 +176,7 @@ type GuildChannelUpdateOne struct {
 	config
 	id           int
 	channel      *string
+	role         *string
 	guild        map[int]struct{}
 	clearedGuild bool
 }
@@ -173,6 +184,12 @@ type GuildChannelUpdateOne struct {
 // SetChannel sets the channel field.
 func (gcuo *GuildChannelUpdateOne) SetChannel(s string) *GuildChannelUpdateOne {
 	gcuo.channel = &s
+	return gcuo
+}
+
+// SetRole sets the role field.
+func (gcuo *GuildChannelUpdateOne) SetRole(s string) *GuildChannelUpdateOne {
+	gcuo.role = &s
 	return gcuo
 }
 
@@ -274,6 +291,10 @@ func (gcuo *GuildChannelUpdateOne) sqlSave(ctx context.Context) (gc *GuildChanne
 	if value := gcuo.channel; value != nil {
 		updater.Set(guildchannel.FieldChannel, *value)
 		gc.Channel = *value
+	}
+	if value := gcuo.role; value != nil {
+		updater.Set(guildchannel.FieldRole, *value)
+		gc.Role = *value
 	}
 	if !updater.Empty() {
 		query, args := updater.Query()

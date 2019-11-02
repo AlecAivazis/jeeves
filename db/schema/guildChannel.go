@@ -15,6 +15,7 @@ type GuildChannel struct {
 func (GuildChannel) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("channel"),
+		field.String("role"),
 	}
 }
 
