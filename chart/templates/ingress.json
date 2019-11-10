@@ -1,0 +1,36 @@
+{
+  "apiVersion": "extensions/v1beta1",
+  "kind": "Ingress",
+  "metadata": {
+    "name": "api-ingress",
+    "annotations": {
+      "kubernetes.io/ingress.class": "nginx",
+      "cert-manager.io/cluster-issuer": "issuer-prod",
+      "kubernetes.io/tls-acme": "true"
+    }
+  },
+  "spec": {
+    "tls": [
+      {
+        "secretName": "api-certificate",
+        "hosts": ["jeeves.aivazis.com"]
+      }
+    ],
+    "rules": [
+      {
+        "host": "jeeves.aivazis.com",
+        "http": {
+          "paths": [
+            {
+              "path": "/",
+              "backend": {
+                "serviceName": "jeeves",
+                "servicePort": 80
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+steps:
+    # build the development docker image
+    - name: 'gcr.io/cloud-builders/docker'
+      entrypoint: 'bash'
+      args:
+          ['-c', 'docker build -t gcr.io/aivazis/jeeves-dev:latest --target development .']
+    # build the production docker image
+    - name: 'gcr.io/cloud-builders/docker'
+      entrypoint: 'bash'
+      args:
+          ['-c', 'docker build -t gcr.io/aivazis/jeeves:latest --target production .']
+    # push the docker image up to the registry
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['push', 'gcr.io/aivazis/jeeves-dev:latest']
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['push', 'gcr.io/aivazis/jeeves:latest']
+    # upgrade the chart pertaining to this service
+    - name: 'gcr.io/platform-247318/helm'
+      args: [
+          'upgrade',
+          '--set', "image=gcr.io/aivazis/jeeves:latest",
+          'jeeves',
+          'chart/'
+      ]
+      env:
+          - 'HELM_VERSION=v3.0.0-rc.2'
+          - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
+          - 'CLOUDSDK_CONTAINER_CLUSTER=aivazis'
+
+images: ['gcr.io/aivazis/jeeves:latest', 'gcr.io/aivazis/jeeves-dev:latest']

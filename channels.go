@@ -130,6 +130,7 @@ func validateChannelRole(role string) error {
 
 // AuthorHasRole returns true if the author has the given jeeves role
 func AuthorHasRole(message *discordgo.Message, role string) (bool, error) {
+	// check every role
 	return true, nil
 }
 

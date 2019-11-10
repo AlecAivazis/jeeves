@@ -1,0 +1,42 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "jeeves",
+    "labels": {
+      "app": "jeeves"
+    },
+    "annotations": {
+      "helm.sh/hook": "post-upgrade",
+      "helm.sh/hook-delete-policy": "before-hook-creation"
+    }
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "matchLabels": {
+        "app": "jeeves"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "jeeves"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "bot",
+            "image": "{{ .Values.image }}",
+            "ports": [
+              {
+                "containerPort": 4000
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
