@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -44,6 +46,11 @@ func main() {
 		panic(err)
 	}
 	defer client.Close()
+
+	// make sure the schema is up to date
+	if err := client.Schema.Create(context.Background()); err != nil {
+		log.Fatalf("failed creating schema resources: %v", err)
+	}
 
 	// instantiate the bot
 	bot := &JeevesBot{
