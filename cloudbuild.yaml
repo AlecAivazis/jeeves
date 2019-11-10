@@ -18,7 +18,7 @@ steps:
     - name: 'gcr.io/aivazis/helm'
       args: [
           'upgrade',
-          '--set', "image=${gcr.io/aivazis/jeeves:$BUILD_ID}",
+          '--set', "image=gcr.io/aivazis/jeeves:$BUILD_ID",
           'jeeves',
           'chart/'
       ]
