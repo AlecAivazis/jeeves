@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -41,6 +42,7 @@ func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate)
 // RegisterChannels allows Jeeves to work across many channels in a guild. In order to know where to look
 // for which messages, the user must assign a role to a particular channel
 func (b *JeevesBot) RegisterChannels(session *discordgo.Session, message *discordgo.MessageCreate) {
+	fmt.Println("hello world from register")
 	// since the message is presumably text, we care about words, not letters
 	words := strings.Split(message.Content, "")
 
@@ -117,11 +119,7 @@ func (b *JeevesBot) RegisterChannels(session *discordgo.Session, message *discor
 }
 
 func validateChannelRole(role string) error {
-	if role == "bank" {
-		return nil
-	}
-
-	if role == "bank-log" {
+	if role == "bank-log" || role == "bank" {
 		return nil
 	}
 
