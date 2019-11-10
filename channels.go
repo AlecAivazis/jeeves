@@ -114,6 +114,8 @@ func (b *JeevesBot) RegisterChannels(session *discordgo.Session, message *discor
 			SetChannel(message.ChannelID).
 			Save(context.Background())
 	}
+
+	_, err = b.Discord.ChannelMessageSend(message.ChannelID, "Okay! We'll use this channel for the following role: "+role)
 }
 
 func validateChannelRole(role string) error {
