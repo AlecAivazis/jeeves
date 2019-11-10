@@ -42,9 +42,9 @@ func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate)
 // RegisterChannels allows Jeeves to work across many channels in a guild. In order to know where to look
 // for which messages, the user must assign a role to a particular channel
 func (b *JeevesBot) RegisterChannels(session *discordgo.Session, message *discordgo.MessageCreate) {
-	fmt.Println("hello world from register")
 	// since the message is presumably text, we care about words, not letters
 	words := strings.Split(message.Content, "")
+	fmt.Println("hello world from register", words)
 
 	// make sure that the message starts with the right command
 	if words[0] != "!"+CommandAssignChannel {
