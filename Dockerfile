@@ -1,13 +1,10 @@
 # ------------------------------------------------------------------------------
 # Development image
 # ------------------------------------------------------------------------------
-FROM golang:latest as development
+FROM golang:1.13.4 as development
 
 # copy the dependencies over
 WORKDIR /go/src/bitbucket.org/habitu8/platform/jeeves
-
-# install prisma
-RUN go get -u github.com/pilu/fresh
 
 COPY go.* ./
 # install them as a separate command so we can save the layer
@@ -24,7 +21,7 @@ CMD fresh
 # ------------------------------------------------------------------------------
 # Production image
 # ------------------------------------------------------------------------------
-FROM alpine:latest
+FROM alpine:latest as production
 
 WORKDIR /root/
 

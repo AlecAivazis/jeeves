@@ -8,13 +8,15 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
+	_ "github.com/lib/pq"
+
 	"github.com/AlecAivazis/jeeves/db"
 )
 
 // JeevesBot provides context for the discord handlers
 type JeevesBot struct {
 	Database *db.Client
-	Discord *discord.Session
+	Discord  *discordgo.Session
 }
 
 func main() {
@@ -46,8 +48,8 @@ func main() {
 	// instantiate the bot
 	bot := &JeevesBot{
 		Database: client,
-		Discord: dg,
-	}	
+		Discord:  dg,
+	}
 
 	// add the various handlers
 	dg.AddHandler(bot.RegisterChannels)

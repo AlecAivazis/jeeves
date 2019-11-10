@@ -5,10 +5,6 @@
     "name": "jeeves",
     "labels": {
       "app": "jeeves"
-    },
-    "annotations": {
-      "helm.sh/hook": "post-upgrade",
-      "helm.sh/hook-delete-policy": "before-hook-creation"
     }
   },
   "spec": {
@@ -32,6 +28,47 @@
             "ports": [
               {
                 "containerPort": 4000
+              }
+            ],
+            "env": [
+              {
+                "name": "TOKEN",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "jeeves-bot-token",
+                    "key": "value"
+                  }
+                }
+              },
+              {
+                "name": "DB_HOST",
+                "value": "10.33.240.3"
+              },
+              {
+                "name": "DB_NAME",
+                "value": "jeeves"
+              },
+              {
+                "name": "DB_PORT",
+                "value": "5432"
+              },
+              {
+                "name": "DB_USER",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "db-credentials",
+                    "key": "username"
+                  }
+                }
+              },
+              {
+                "name": "DB_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "name": "db-credentials",
+                    "key": "password"
+                  }
+                }
               }
             ]
           }
