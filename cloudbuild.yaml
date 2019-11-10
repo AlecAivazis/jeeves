@@ -21,9 +21,10 @@ steps:
           'jeeves',
           'chart/'
       ]
-      env:
-          - 'HELM_VERSION=v3.0.0-rc.2'
-          - 'CLOUDSDK_COMPUTE_ZONE=us-central1-a'
-          - 'CLOUDSDK_CONTAINER_CLUSTER=aivazis'
+      env: [
+        'HELM_VERSION=v3.0.0-rc.2',
+        'CLOUDSDK_COMPUTE_ZONE=us-central1-a',
+        'CLOUDSDK_CONTAINER_CLUSTER=aivazis',
+      ]
 
 images: ['gcr.io/aivazis/jeeves:latest', 'gcr.io/aivazis/jeeves-dev:latest']
