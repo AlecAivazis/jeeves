@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -43,8 +42,7 @@ func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate)
 // for which messages, the user must assign a role to a particular channel
 func (b *JeevesBot) RegisterChannels(session *discordgo.Session, message *discordgo.MessageCreate) {
 	// since the message is presumably text, we care about words, not letters
-	words := strings.Split(message.Content, "")
-	fmt.Println("hello world from register", words)
+	words := strings.Split(message.Content, " ")
 
 	// make sure that the message starts with the right command
 	if words[0] != "!"+CommandAssignChannel {
