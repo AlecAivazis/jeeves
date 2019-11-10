@@ -56,6 +56,13 @@ func main() {
 	dg.AddHandler(bot.BankHandler)
 	dg.AddHandler(bot.NewGuild)
 
+	// Open a websocket connection to Discord and begin listening.
+	err = dg.Open()
+	if err != nil {
+		fmt.Println("error opening connection,", err)
+		return
+	}
+
 	// wait for some kind of signal to stop
 	fmt.Println("Jeeves is now running. Press ctrl+c to exit")
 	sc := make(chan os.Signal, 1)
