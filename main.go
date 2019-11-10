@@ -63,6 +63,8 @@ func main() {
 		return
 	}
 
+	fmt.Println("Open!!")
+
 	// wait for some kind of signal to stop
 	fmt.Println("Jeeves is now running. Press ctrl+c to exit")
 	sc := make(chan os.Signal, 1)
