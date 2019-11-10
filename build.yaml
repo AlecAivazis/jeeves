@@ -15,10 +15,9 @@ steps:
     - name: 'gcr.io/cloud-builders/docker'
       args: ['push', 'gcr.io/aivazis/jeeves:latest']
     # upgrade the chart pertaining to this service
-    - name: 'gcr.io/platform-247318/helm'
+    - name: 'gcr.io/aivazis/helm'
       args: [
           'upgrade',
-          '--set', "image=gcr.io/aivazis/jeeves:latest",
           'jeeves',
           'chart/'
       ]
