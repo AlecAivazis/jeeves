@@ -1,4 +1,4 @@
-package main
+package jeeves
 
 import (
 	"context"
@@ -16,8 +16,6 @@ import (
 const (
 	// ChannelRoleBank is the channel role used to identify the channel that displays the bank contents
 	ChannelRoleBank = "bank"
-	// ChannelRoleBankLog is the channel role used to identify the channel that the Banker uses
-	ChannelRoleBankLog = "bank-log"
 )
 
 // Commands
@@ -40,7 +38,7 @@ func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate)
 
 // RegisterChannels allows Jeeves to work across many channels in a guild. In order to know where to look
 // for which messages, the user must assign a role to a particular channel
-func (b *JeevesBot) RegisterChannels(session *discordgo.Session, message *discordgo.MessageCreate) {
+func (b *JeevesBot) RegisterChannel(message *discordgo.MessageCreate) {
 	// since the message is presumably text, we care about words, not letters
 	words := strings.Split(message.Content, " ")
 
