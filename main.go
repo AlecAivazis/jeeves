@@ -29,7 +29,6 @@ func (b *JeevesBot) ReportError(channel string, errorToReport error) (err error)
 	return err
 }
 
-
 func main() {
 	// if there is no token
 	if BotToken == "" {
@@ -68,7 +67,7 @@ func main() {
 	}
 
 	// add the various handlers
-	dg.AddHandler(bot.CommandHandler)
+	dg.AddHandler(bot.RegisterChannels)
 	dg.AddHandler(bot.NewGuild)
 
 	// Open a websocket connection to Discord and begin listening.
