@@ -1,4 +1,4 @@
-package jeeves
+package bot
 
 // Jeeve's bank features are summarized with the following commands:
 // !deposit 1xA 2xB C - adds one A, two B, and one C to the guild's bank

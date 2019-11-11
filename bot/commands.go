@@ -1,4 +1,4 @@
-package jeeves
+package bot
 
 import (
 	"strings"

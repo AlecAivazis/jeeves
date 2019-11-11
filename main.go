@@ -1,9 +1,9 @@
 package main
 
 import (
-	jeeves "github.com/AlecAivazis/jeeves/bot"
+	"github.com/AlecAivazis/jeeves/bot"
 )
 
 func main() {
-	jeeves.Start()
+	bot.Start()
 }
