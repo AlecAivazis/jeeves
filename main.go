@@ -21,6 +21,15 @@ type JeevesBot struct {
 	Discord  *discordgo.Session
 }
 
+// ReportError sends the error to the specified channel
+func (b *JeevesBot) ReportError(channel string, errorToReport error) (err error) {
+	// send the error message to the channel
+	_, err = b.Discord.ChannelMessageSend(channel, errorToReport.Error())
+
+	return err
+}
+
+
 func main() {
 	// if there is no token
 	if BotToken == "" {
@@ -59,8 +68,7 @@ func main() {
 	}
 
 	// add the various handlers
-	dg.AddHandler(bot.RegisterChannels)
-	dg.AddHandler(bot.BankHandler)
+	dg.AddHandler(bot.CommandHandler)
 	dg.AddHandler(bot.NewGuild)
 
 	// Open a websocket connection to Discord and begin listening.
