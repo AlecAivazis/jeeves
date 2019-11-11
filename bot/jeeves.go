@@ -15,20 +15,6 @@ import (
 	"github.com/AlecAivazis/jeeves/db"
 )
 
-// JeevesBot provides context for the discord handlers
-type JeevesBot struct {
-	Database *db.Client
-	Discord  *discordgo.Session
-}
-
-// ReportError sends the error to the specified channel
-func (b *JeevesBot) ReportError(channel string, errorToReport error) (err error) {
-	// send the error message to the channel
-	_, err = b.Discord.ChannelMessageSend(channel, errorToReport.Error())
-
-	return err
-}
-
 func Start() {
 	// if there is no token
 	if BotToken == "" {
@@ -68,6 +54,7 @@ func Start() {
 
 	// add the various handlers
 	dg.AddHandler(bot.NewGuild)
+	dg.AddHandler(bot.BankHandler)
 
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
@@ -81,4 +68,31 @@ func Start() {
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
+}
+
+// JeevesBot provides context for the discord handlers
+type JeevesBot struct {
+	Database *db.Client
+	Discord  *discordgo.Session
+}
+
+// ReportError sends the error to the specified channel
+func (b *JeevesBot) ReportError(channel string, errorToReport error) (err error) {
+	// send the error message to the channel
+	_, err = b.Discord.ChannelMessageSend(channel, errorToReport.Error())
+
+	return err
+}
+
+// NewGuild is invoked when a guild is registered with the bot
+func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate) {
+	// only register guilds we have access to
+	if event.Guild.Unavailable {
+		return
+	}
+
+	// add an entry in the database for the new guild
+	b.Database.Guild.Create().
+		SetDiscordID(event.Guild.ID).
+		Save(context.Background())
 }
