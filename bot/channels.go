@@ -3,7 +3,6 @@ package jeeves
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -23,50 +22,29 @@ const (
 	CommandAssignChannel = "jeeves-assign-channel"
 )
 
-// RegisterChannels allows Jeeves to work across many channels in a guild. In order to know where to look
+// RegisterChannelRole allows Jeeves to work across many channels in a guild. In order to know where to look
 // for which messages, the user must assign a role to a particular channel
-func (b *JeevesBot) RegisterChannel(message *discordgo.MessageCreate) {
-	// since the message is presumably text, we care about words, not letters
-	words := strings.Split(message.Content, " ")
-
-	// make sure that the message starts with the right command
-	if words[0] != "!"+CommandAssignChannel {
-		return
-	}
-
-	//  there must be one argument after the command
-	if len(words) != 2 {
-		b.ReportError(message.ChannelID, errors.New("Please provide a role to associate with this channel"))
-		return
-	}
-
-	// the role they want to assign
-	role := words[1]
-
+func (b *JeevesBot) RegisterChannelRole(ctx *CommandContext, role string) error {
 	// make sure the channel role is a valid one
 	if err := validateChannelRole(role); err != nil {
-		b.ReportError(message.ChannelID, err)
-		return
+		return err
 	}
 
 	// check if the users has permissions to set channel roles
-	hasPerm, err := AuthorHasPermission(message.Message, discordgo.PermissionManageServer)
+	hasPerm, err := AuthorHasPermission(ctx, discordgo.PermissionManageServer)
 	if err != nil {
-		b.ReportError(message.ChannelID, err)
-		return
+		return err
 	}
 	if !hasPerm {
-		b.ReportError(message.ChannelID, errors.New("Sorry, you do not have permission to set channel roles"))
-		return
+		return errors.New("Sorry, you do not have permission to set channel roles")
 	}
 
 	// look up the database entry associated with this guild
 	guildRecord, err := b.Database.Guild.Query().
-		Where(guild.DiscordID(message.GuildID)).
+		Where(guild.DiscordID(ctx.GuildID)).
 		Only(context.Background())
 	if err != nil {
-		b.ReportError(message.ChannelID, err)
-		return
+		return err
 	}
 
 	// we need a get or update on the same guild channel config
@@ -80,8 +58,7 @@ func (b *JeevesBot) RegisterChannel(message *discordgo.MessageCreate) {
 		Where(wherePredicates...).
 		Exist(context.Background())
 	if err != nil {
-		b.ReportError(message.ChannelID, err)
-		return
+		return err
 	}
 
 	// if the guild had not configured this channel role before
@@ -90,21 +67,22 @@ func (b *JeevesBot) RegisterChannel(message *discordgo.MessageCreate) {
 		b.Database.GuildChannel.Create().
 			SetGuild(guildRecord).
 			SetRole(role).
-			SetChannel(message.ChannelID).
+			SetChannel(ctx.ChannelID).
 			Save(context.Background())
 	} else {
 		// otherwise we need to update the existing channel association
 		b.Database.GuildChannel.Update().
 			Where(wherePredicates...).
-			SetChannel(message.ChannelID).
+			SetChannel(ctx.ChannelID).
 			Save(context.Background())
 	}
 
-	_, err = b.Discord.ChannelMessageSend(message.ChannelID, "Okay! I'll use this channel for the following role: "+role)
+	_, err = b.Discord.ChannelMessageSend(ctx.ChannelID, "Okay! I'll use this channel for the following role: "+role)
 	if err != nil {
-		b.ReportError(message.ChannelID, err)
-		return
+		return err
 	}
+
+	return nil
 }
 
 func validateChannelRole(role string) error {
@@ -122,6 +100,6 @@ func AuthorHasRole(message *discordgo.Message, role string) (bool, error) {
 }
 
 // AuthorHasPermission returns true if the author has the given permissions
-func AuthorHasPermission(message *discordgo.Message, perm int) (bool, error) {
+func AuthorHasPermission(message *CommandContext, perm int) (bool, error) {
 	return true, nil
 }
