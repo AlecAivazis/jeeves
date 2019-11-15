@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-var ItemNumbers = map[string]int{
+var itemNumbers = map[string]int{
 	"Squire's Shirt":                             45,
 	"Layered Tunic":                              60,
 	"Dwarven Leather Pants":                      61,
@@ -11745,13 +11745,14 @@ var ItemNumbers = map[string]int{
 	"Hardpacked Snowball":                                 21038,
 }
 
-func ItemNumber(name string) (string, error) {
+// ItemID returns the WoW item ID for the item with the given name
+func ItemID(name string) (string, error) {
 	// do we have an entry for that item
-	if item, ok := ItemNumbers[properTitle(name)]; ok {
+	if item, ok := itemNumbers[properTitle(name)]; ok {
 		// stringify the int value
 		return strconv.FormatInt(int64(item), 10), nil
 	}
 
 	// there was no entry for that name
-	return "", errors.New("Encountered unknown item: " + name)
+	return "", errors.New("I don't recognize this item: " + name)
 }

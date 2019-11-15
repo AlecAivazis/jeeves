@@ -9,7 +9,7 @@ import (
 )
 
 func TestParseTransaction(t *testing.T) {
-	lavaCoreID, _ := bot.ItemNumber("Lava Core")
+	lavaCoreID, _ := bot.ItemID("Lava Core")
 
 	// the table
 	table := []struct {

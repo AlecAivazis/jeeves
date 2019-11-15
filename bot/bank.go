@@ -337,7 +337,7 @@ func ParseTransaction(entry string) (Transaction, error) {
 	transaction.Amount = quantity
 
 	// convert the item name into the normalized ID
-	itemID, err := ItemNumber(itemName)
+	itemID, err := ItemID(itemName)
 	if err != nil {
 		return transaction, err
 	}
