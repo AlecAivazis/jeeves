@@ -301,13 +301,20 @@ func ParseTransaction(entry string) (Transaction, error) {
 	item := strings.ToLower(strings.Trim(entry, " "))
 
 	// the transaction to return
-	transaction := Transaction{
-		Item:   item,
-		Amount: 1,
-	}
+	transaction := Transaction{}
 
 	// if the first letter does not parse to an int, there is no quantity
 	if !strings.Contains(numbers, string(item[0])) {
+		// the whole string is the item
+		itemID, err := ItemID(item)
+		if err != nil {
+			return transaction, err
+		}
+
+		// we are a transaction of one
+		transaction.Item = itemID
+		transaction.Amount = 1
+
 		// we're done
 		return transaction, nil
 	}
