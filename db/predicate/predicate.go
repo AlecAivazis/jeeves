@@ -12,5 +12,5 @@ type BankItem func(*sql.Selector)
 // Guild is the predicate function for guild builders.
 type Guild func(*sql.Selector)
 
-// GuildChannel is the predicate function for guildchannel builders.
-type GuildChannel func(*sql.Selector)
+// GuildBank is the predicate function for guildbank builders.
+type GuildBank func(*sql.Selector)

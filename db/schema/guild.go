@@ -21,7 +21,6 @@ func (Guild) Fields() []ent.Field {
 // Edges of the Guild.
 func (Guild) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("channels", GuildChannel.Type),
-		edge.To("bank", BankItem.Type),
+		edge.To("bank", GuildBank.Type).Unique(),
 	}
 }

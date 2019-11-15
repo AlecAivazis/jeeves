@@ -41,9 +41,9 @@ func (bi *BankItem) FromRows(rows *sql.Rows) error {
 	return nil
 }
 
-// QueryGuild queries the guild edge of the BankItem.
-func (bi *BankItem) QueryGuild() *GuildQuery {
-	return (&BankItemClient{bi.config}).QueryGuild(bi)
+// QueryBank queries the bank edge of the BankItem.
+func (bi *BankItem) QueryBank() *GuildBankQuery {
+	return (&BankItemClient{bi.config}).QueryBank(bi)
 }
 
 // Update returns a builder for updating this BankItem.

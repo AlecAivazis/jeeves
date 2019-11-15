@@ -7,9 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/AlecAivazis/jeeves/db/bankitem"
 	"github.com/AlecAivazis/jeeves/db/guild"
-	"github.com/AlecAivazis/jeeves/db/guildchannel"
+	"github.com/AlecAivazis/jeeves/db/guildbank"
 	"github.com/facebookincubator/ent/dialect/sql"
 )
 
@@ -17,7 +16,6 @@ import (
 type GuildCreate struct {
 	config
 	discordID *string
-	channels  map[int]struct{}
 	bank      map[int]struct{}
 }
 
@@ -27,50 +25,35 @@ func (gc *GuildCreate) SetDiscordID(s string) *GuildCreate {
 	return gc
 }
 
-// AddChannelIDs adds the channels edge to GuildChannel by ids.
-func (gc *GuildCreate) AddChannelIDs(ids ...int) *GuildCreate {
-	if gc.channels == nil {
-		gc.channels = make(map[int]struct{})
-	}
-	for i := range ids {
-		gc.channels[ids[i]] = struct{}{}
-	}
-	return gc
-}
-
-// AddChannels adds the channels edges to GuildChannel.
-func (gc *GuildCreate) AddChannels(g ...*GuildChannel) *GuildCreate {
-	ids := make([]int, len(g))
-	for i := range g {
-		ids[i] = g[i].ID
-	}
-	return gc.AddChannelIDs(ids...)
-}
-
-// AddBankIDs adds the bank edge to BankItem by ids.
-func (gc *GuildCreate) AddBankIDs(ids ...int) *GuildCreate {
+// SetBankID sets the bank edge to GuildBank by id.
+func (gc *GuildCreate) SetBankID(id int) *GuildCreate {
 	if gc.bank == nil {
 		gc.bank = make(map[int]struct{})
 	}
-	for i := range ids {
-		gc.bank[ids[i]] = struct{}{}
+	gc.bank[id] = struct{}{}
+	return gc
+}
+
+// SetNillableBankID sets the bank edge to GuildBank by id if the given value is not nil.
+func (gc *GuildCreate) SetNillableBankID(id *int) *GuildCreate {
+	if id != nil {
+		gc = gc.SetBankID(*id)
 	}
 	return gc
 }
 
-// AddBank adds the bank edges to BankItem.
-func (gc *GuildCreate) AddBank(b ...*BankItem) *GuildCreate {
-	ids := make([]int, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return gc.AddBankIDs(ids...)
+// SetBank sets the bank edge to GuildBank.
+func (gc *GuildCreate) SetBank(g *GuildBank) *GuildCreate {
+	return gc.SetBankID(g.ID)
 }
 
 // Save creates the Guild in the database.
 func (gc *GuildCreate) Save(ctx context.Context) (*Guild, error) {
 	if gc.discordID == nil {
 		return nil, errors.New("db: missing required field \"discordID\"")
+	}
+	if len(gc.bank) > 1 {
+		return nil, errors.New("db: multiple assignments on a unique edge \"bank\"")
 	}
 	return gc.sqlSave(ctx)
 }
@@ -104,34 +87,11 @@ func (gc *GuildCreate) sqlSave(ctx context.Context) (*Guild, error) {
 		return nil, rollback(tx, err)
 	}
 	gu.ID = int(id)
-	if len(gc.channels) > 0 {
-		p := sql.P()
-		for eid := range gc.channels {
-			p.Or().EQ(guildchannel.FieldID, eid)
-		}
-		query, args := builder.Update(guild.ChannelsTable).
-			Set(guild.ChannelsColumn, id).
-			Where(sql.And(p, sql.IsNull(guild.ChannelsColumn))).
-			Query()
-		if err := tx.Exec(ctx, query, args, &res); err != nil {
-			return nil, rollback(tx, err)
-		}
-		affected, err := res.RowsAffected()
-		if err != nil {
-			return nil, rollback(tx, err)
-		}
-		if int(affected) < len(gc.channels) {
-			return nil, rollback(tx, &ErrConstraintFailed{msg: fmt.Sprintf("one of \"channels\" %v already connected to a different \"Guild\"", keys(gc.channels))})
-		}
-	}
 	if len(gc.bank) > 0 {
-		p := sql.P()
-		for eid := range gc.bank {
-			p.Or().EQ(bankitem.FieldID, eid)
-		}
+		eid := keys(gc.bank)[0]
 		query, args := builder.Update(guild.BankTable).
 			Set(guild.BankColumn, id).
-			Where(sql.And(p, sql.IsNull(guild.BankColumn))).
+			Where(sql.EQ(guildbank.FieldID, eid).And().IsNull(guild.BankColumn)).
 			Query()
 		if err := tx.Exec(ctx, query, args, &res); err != nil {
 			return nil, rollback(tx, err)

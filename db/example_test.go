@@ -52,44 +52,31 @@ func ExampleGuild() {
 	defer drv.Close()
 	client := NewClient(Driver(drv))
 	// creating vertices for the guild's edges.
-	gc0 := client.GuildChannel.
+	gb0 := client.GuildBank.
 		Create().
-		SetChannel("string").
-		SetRole("string").
+		SetChannelID("string").
+		SetDisplayMessageID("string").
 		SaveX(ctx)
-	log.Println("guildchannel created:", gc0)
-	bi1 := client.BankItem.
-		Create().
-		SetItemID("string").
-		SetQuantity(1).
-		SaveX(ctx)
-	log.Println("bankitem created:", bi1)
+	log.Println("guildbank created:", gb0)
 
 	// create guild vertex with its edges.
 	gu := client.Guild.
 		Create().
 		SetDiscordID("string").
-		AddChannels(gc0).
-		AddBank(bi1).
+		SetBank(gb0).
 		SaveX(ctx)
 	log.Println("guild created:", gu)
 
 	// query edges.
-	gc0, err = gu.QueryChannels().First(ctx)
-	if err != nil {
-		log.Fatalf("failed querying channels: %v", err)
-	}
-	log.Println("channels found:", gc0)
-
-	bi1, err = gu.QueryBank().First(ctx)
+	gb0, err = gu.QueryBank().First(ctx)
 	if err != nil {
 		log.Fatalf("failed querying bank: %v", err)
 	}
-	log.Println("bank found:", bi1)
+	log.Println("bank found:", gb0)
 
 	// Output:
 }
-func ExampleGuildChannel() {
+func ExampleGuildBank() {
 	if dsn == "" {
 		return
 	}
@@ -100,17 +87,29 @@ func ExampleGuildChannel() {
 	}
 	defer drv.Close()
 	client := NewClient(Driver(drv))
-	// creating vertices for the guildchannel's edges.
-
-	// create guildchannel vertex with its edges.
-	gc := client.GuildChannel.
+	// creating vertices for the guildbank's edges.
+	bi0 := client.BankItem.
 		Create().
-		SetChannel("string").
-		SetRole("string").
+		SetItemID("string").
+		SetQuantity(1).
 		SaveX(ctx)
-	log.Println("guildchannel created:", gc)
+	log.Println("bankitem created:", bi0)
+
+	// create guildbank vertex with its edges.
+	gb := client.GuildBank.
+		Create().
+		SetChannelID("string").
+		SetDisplayMessageID("string").
+		AddItems(bi0).
+		SaveX(ctx)
+	log.Println("guildbank created:", gb)
 
 	// query edges.
+	bi0, err = gb.QueryItems().First(ctx)
+	if err != nil {
+		log.Fatalf("failed querying items: %v", err)
+	}
+	log.Println("items found:", bi0)
 
 	// Output:
 }

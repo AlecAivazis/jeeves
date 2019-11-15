@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"context"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -8,6 +9,7 @@ import (
 
 // CommandContext holds the contextual information for a message that we receive
 type CommandContext struct {
+	context.Context
 	GuildID   string
 	ChannelID string
 }
@@ -28,17 +30,18 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 	ctx := &CommandContext{
 		GuildID:   message.GuildID,
 		ChannelID: message.ChannelID,
+		Context:   context.Background(),
 	}
 
 	var err error
 	// check the command against our known strings
 	switch command {
+	case CommandAssignBankChannel:
+		err = b.InitializeBankChannel(ctx)
 	case CommandDeposit:
 		err = b.DepositItems(ctx, args)
 	case CommandWithdraw:
 		err = b.WithdrawItems(ctx, args)
-	case CommandAssignChannel:
-		err = b.RegisterChannelRole(ctx, args[0])
 	}
 	// if the command failed
 	if err != nil {

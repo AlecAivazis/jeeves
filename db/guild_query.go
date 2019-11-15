@@ -8,9 +8,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/AlecAivazis/jeeves/db/bankitem"
 	"github.com/AlecAivazis/jeeves/db/guild"
-	"github.com/AlecAivazis/jeeves/db/guildchannel"
+	"github.com/AlecAivazis/jeeves/db/guildbank"
 	"github.com/AlecAivazis/jeeves/db/predicate"
 	"github.com/facebookincubator/ent/dialect/sql"
 )
@@ -51,27 +50,12 @@ func (gq *GuildQuery) Order(o ...Order) *GuildQuery {
 	return gq
 }
 
-// QueryChannels chains the current query on the channels edge.
-func (gq *GuildQuery) QueryChannels() *GuildChannelQuery {
-	query := &GuildChannelQuery{config: gq.config}
-
-	builder := sql.Dialect(gq.driver.Dialect())
-	t1 := builder.Table(guildchannel.Table)
-	t2 := gq.sqlQuery()
-	t2.Select(t2.C(guild.FieldID))
-	query.sql = builder.Select().
-		From(t1).
-		Join(t2).
-		On(t1.C(guild.ChannelsColumn), t2.C(guild.FieldID))
-	return query
-}
-
 // QueryBank chains the current query on the bank edge.
-func (gq *GuildQuery) QueryBank() *BankItemQuery {
-	query := &BankItemQuery{config: gq.config}
+func (gq *GuildQuery) QueryBank() *GuildBankQuery {
+	query := &GuildBankQuery{config: gq.config}
 
 	builder := sql.Dialect(gq.driver.Dialect())
-	t1 := builder.Table(bankitem.Table)
+	t1 := builder.Table(guildbank.Table)
 	t2 := gq.sqlQuery()
 	t2.Select(t2.C(guild.FieldID))
 	query.sql = builder.Select().

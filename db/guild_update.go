@@ -4,11 +4,11 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/AlecAivazis/jeeves/db/bankitem"
 	"github.com/AlecAivazis/jeeves/db/guild"
-	"github.com/AlecAivazis/jeeves/db/guildchannel"
+	"github.com/AlecAivazis/jeeves/db/guildbank"
 	"github.com/AlecAivazis/jeeves/db/predicate"
 	"github.com/facebookincubator/ent/dialect/sql"
 )
@@ -16,12 +16,10 @@ import (
 // GuildUpdate is the builder for updating Guild entities.
 type GuildUpdate struct {
 	config
-	discordID       *string
-	channels        map[int]struct{}
-	bank            map[int]struct{}
-	removedChannels map[int]struct{}
-	removedBank     map[int]struct{}
-	predicates      []predicate.Guild
+	discordID   *string
+	bank        map[int]struct{}
+	clearedBank bool
+	predicates  []predicate.Guild
 }
 
 // Where adds a new predicate for the builder.
@@ -36,88 +34,39 @@ func (gu *GuildUpdate) SetDiscordID(s string) *GuildUpdate {
 	return gu
 }
 
-// AddChannelIDs adds the channels edge to GuildChannel by ids.
-func (gu *GuildUpdate) AddChannelIDs(ids ...int) *GuildUpdate {
-	if gu.channels == nil {
-		gu.channels = make(map[int]struct{})
-	}
-	for i := range ids {
-		gu.channels[ids[i]] = struct{}{}
-	}
-	return gu
-}
-
-// AddChannels adds the channels edges to GuildChannel.
-func (gu *GuildUpdate) AddChannels(g ...*GuildChannel) *GuildUpdate {
-	ids := make([]int, len(g))
-	for i := range g {
-		ids[i] = g[i].ID
-	}
-	return gu.AddChannelIDs(ids...)
-}
-
-// AddBankIDs adds the bank edge to BankItem by ids.
-func (gu *GuildUpdate) AddBankIDs(ids ...int) *GuildUpdate {
+// SetBankID sets the bank edge to GuildBank by id.
+func (gu *GuildUpdate) SetBankID(id int) *GuildUpdate {
 	if gu.bank == nil {
 		gu.bank = make(map[int]struct{})
 	}
-	for i := range ids {
-		gu.bank[ids[i]] = struct{}{}
+	gu.bank[id] = struct{}{}
+	return gu
+}
+
+// SetNillableBankID sets the bank edge to GuildBank by id if the given value is not nil.
+func (gu *GuildUpdate) SetNillableBankID(id *int) *GuildUpdate {
+	if id != nil {
+		gu = gu.SetBankID(*id)
 	}
 	return gu
 }
 
-// AddBank adds the bank edges to BankItem.
-func (gu *GuildUpdate) AddBank(b ...*BankItem) *GuildUpdate {
-	ids := make([]int, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return gu.AddBankIDs(ids...)
+// SetBank sets the bank edge to GuildBank.
+func (gu *GuildUpdate) SetBank(g *GuildBank) *GuildUpdate {
+	return gu.SetBankID(g.ID)
 }
 
-// RemoveChannelIDs removes the channels edge to GuildChannel by ids.
-func (gu *GuildUpdate) RemoveChannelIDs(ids ...int) *GuildUpdate {
-	if gu.removedChannels == nil {
-		gu.removedChannels = make(map[int]struct{})
-	}
-	for i := range ids {
-		gu.removedChannels[ids[i]] = struct{}{}
-	}
+// ClearBank clears the bank edge to GuildBank.
+func (gu *GuildUpdate) ClearBank() *GuildUpdate {
+	gu.clearedBank = true
 	return gu
-}
-
-// RemoveChannels removes channels edges to GuildChannel.
-func (gu *GuildUpdate) RemoveChannels(g ...*GuildChannel) *GuildUpdate {
-	ids := make([]int, len(g))
-	for i := range g {
-		ids[i] = g[i].ID
-	}
-	return gu.RemoveChannelIDs(ids...)
-}
-
-// RemoveBankIDs removes the bank edge to BankItem by ids.
-func (gu *GuildUpdate) RemoveBankIDs(ids ...int) *GuildUpdate {
-	if gu.removedBank == nil {
-		gu.removedBank = make(map[int]struct{})
-	}
-	for i := range ids {
-		gu.removedBank[ids[i]] = struct{}{}
-	}
-	return gu
-}
-
-// RemoveBank removes bank edges to BankItem.
-func (gu *GuildUpdate) RemoveBank(b ...*BankItem) *GuildUpdate {
-	ids := make([]int, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return gu.RemoveBankIDs(ids...)
 }
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
 func (gu *GuildUpdate) Save(ctx context.Context) (int, error) {
+	if len(gu.bank) > 1 {
+		return 0, errors.New("db: multiple assignments on a unique edge \"bank\"")
+	}
 	return gu.sqlSave(ctx)
 }
 
@@ -186,51 +135,10 @@ func (gu *GuildUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			return 0, rollback(tx, err)
 		}
 	}
-	if len(gu.removedChannels) > 0 {
-		eids := make([]int, len(gu.removedChannels))
-		for eid := range gu.removedChannels {
-			eids = append(eids, eid)
-		}
-		query, args := builder.Update(guild.ChannelsTable).
-			SetNull(guild.ChannelsColumn).
-			Where(sql.InInts(guild.ChannelsColumn, ids...)).
-			Where(sql.InInts(guildchannel.FieldID, eids...)).
-			Query()
-		if err := tx.Exec(ctx, query, args, &res); err != nil {
-			return 0, rollback(tx, err)
-		}
-	}
-	if len(gu.channels) > 0 {
-		for _, id := range ids {
-			p := sql.P()
-			for eid := range gu.channels {
-				p.Or().EQ(guildchannel.FieldID, eid)
-			}
-			query, args := builder.Update(guild.ChannelsTable).
-				Set(guild.ChannelsColumn, id).
-				Where(sql.And(p, sql.IsNull(guild.ChannelsColumn))).
-				Query()
-			if err := tx.Exec(ctx, query, args, &res); err != nil {
-				return 0, rollback(tx, err)
-			}
-			affected, err := res.RowsAffected()
-			if err != nil {
-				return 0, rollback(tx, err)
-			}
-			if int(affected) < len(gu.channels) {
-				return 0, rollback(tx, &ErrConstraintFailed{msg: fmt.Sprintf("one of \"channels\" %v already connected to a different \"Guild\"", keys(gu.channels))})
-			}
-		}
-	}
-	if len(gu.removedBank) > 0 {
-		eids := make([]int, len(gu.removedBank))
-		for eid := range gu.removedBank {
-			eids = append(eids, eid)
-		}
+	if gu.clearedBank {
 		query, args := builder.Update(guild.BankTable).
 			SetNull(guild.BankColumn).
-			Where(sql.InInts(guild.BankColumn, ids...)).
-			Where(sql.InInts(bankitem.FieldID, eids...)).
+			Where(sql.InInts(guildbank.FieldID, ids...)).
 			Query()
 		if err := tx.Exec(ctx, query, args, &res); err != nil {
 			return 0, rollback(tx, err)
@@ -238,13 +146,10 @@ func (gu *GuildUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if len(gu.bank) > 0 {
 		for _, id := range ids {
-			p := sql.P()
-			for eid := range gu.bank {
-				p.Or().EQ(bankitem.FieldID, eid)
-			}
+			eid := keys(gu.bank)[0]
 			query, args := builder.Update(guild.BankTable).
 				Set(guild.BankColumn, id).
-				Where(sql.And(p, sql.IsNull(guild.BankColumn))).
+				Where(sql.EQ(guildbank.FieldID, eid).And().IsNull(guild.BankColumn)).
 				Query()
 			if err := tx.Exec(ctx, query, args, &res); err != nil {
 				return 0, rollback(tx, err)
@@ -267,12 +172,10 @@ func (gu *GuildUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // GuildUpdateOne is the builder for updating a single Guild entity.
 type GuildUpdateOne struct {
 	config
-	id              int
-	discordID       *string
-	channels        map[int]struct{}
-	bank            map[int]struct{}
-	removedChannels map[int]struct{}
-	removedBank     map[int]struct{}
+	id          int
+	discordID   *string
+	bank        map[int]struct{}
+	clearedBank bool
 }
 
 // SetDiscordID sets the discordID field.
@@ -281,88 +184,39 @@ func (guo *GuildUpdateOne) SetDiscordID(s string) *GuildUpdateOne {
 	return guo
 }
 
-// AddChannelIDs adds the channels edge to GuildChannel by ids.
-func (guo *GuildUpdateOne) AddChannelIDs(ids ...int) *GuildUpdateOne {
-	if guo.channels == nil {
-		guo.channels = make(map[int]struct{})
-	}
-	for i := range ids {
-		guo.channels[ids[i]] = struct{}{}
-	}
-	return guo
-}
-
-// AddChannels adds the channels edges to GuildChannel.
-func (guo *GuildUpdateOne) AddChannels(g ...*GuildChannel) *GuildUpdateOne {
-	ids := make([]int, len(g))
-	for i := range g {
-		ids[i] = g[i].ID
-	}
-	return guo.AddChannelIDs(ids...)
-}
-
-// AddBankIDs adds the bank edge to BankItem by ids.
-func (guo *GuildUpdateOne) AddBankIDs(ids ...int) *GuildUpdateOne {
+// SetBankID sets the bank edge to GuildBank by id.
+func (guo *GuildUpdateOne) SetBankID(id int) *GuildUpdateOne {
 	if guo.bank == nil {
 		guo.bank = make(map[int]struct{})
 	}
-	for i := range ids {
-		guo.bank[ids[i]] = struct{}{}
+	guo.bank[id] = struct{}{}
+	return guo
+}
+
+// SetNillableBankID sets the bank edge to GuildBank by id if the given value is not nil.
+func (guo *GuildUpdateOne) SetNillableBankID(id *int) *GuildUpdateOne {
+	if id != nil {
+		guo = guo.SetBankID(*id)
 	}
 	return guo
 }
 
-// AddBank adds the bank edges to BankItem.
-func (guo *GuildUpdateOne) AddBank(b ...*BankItem) *GuildUpdateOne {
-	ids := make([]int, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return guo.AddBankIDs(ids...)
+// SetBank sets the bank edge to GuildBank.
+func (guo *GuildUpdateOne) SetBank(g *GuildBank) *GuildUpdateOne {
+	return guo.SetBankID(g.ID)
 }
 
-// RemoveChannelIDs removes the channels edge to GuildChannel by ids.
-func (guo *GuildUpdateOne) RemoveChannelIDs(ids ...int) *GuildUpdateOne {
-	if guo.removedChannels == nil {
-		guo.removedChannels = make(map[int]struct{})
-	}
-	for i := range ids {
-		guo.removedChannels[ids[i]] = struct{}{}
-	}
+// ClearBank clears the bank edge to GuildBank.
+func (guo *GuildUpdateOne) ClearBank() *GuildUpdateOne {
+	guo.clearedBank = true
 	return guo
-}
-
-// RemoveChannels removes channels edges to GuildChannel.
-func (guo *GuildUpdateOne) RemoveChannels(g ...*GuildChannel) *GuildUpdateOne {
-	ids := make([]int, len(g))
-	for i := range g {
-		ids[i] = g[i].ID
-	}
-	return guo.RemoveChannelIDs(ids...)
-}
-
-// RemoveBankIDs removes the bank edge to BankItem by ids.
-func (guo *GuildUpdateOne) RemoveBankIDs(ids ...int) *GuildUpdateOne {
-	if guo.removedBank == nil {
-		guo.removedBank = make(map[int]struct{})
-	}
-	for i := range ids {
-		guo.removedBank[ids[i]] = struct{}{}
-	}
-	return guo
-}
-
-// RemoveBank removes bank edges to BankItem.
-func (guo *GuildUpdateOne) RemoveBank(b ...*BankItem) *GuildUpdateOne {
-	ids := make([]int, len(b))
-	for i := range b {
-		ids[i] = b[i].ID
-	}
-	return guo.RemoveBankIDs(ids...)
 }
 
 // Save executes the query and returns the updated entity.
 func (guo *GuildUpdateOne) Save(ctx context.Context) (*Guild, error) {
+	if len(guo.bank) > 1 {
+		return nil, errors.New("db: multiple assignments on a unique edge \"bank\"")
+	}
 	return guo.sqlSave(ctx)
 }
 
@@ -435,51 +289,10 @@ func (guo *GuildUpdateOne) sqlSave(ctx context.Context) (gu *Guild, err error) {
 			return nil, rollback(tx, err)
 		}
 	}
-	if len(guo.removedChannels) > 0 {
-		eids := make([]int, len(guo.removedChannels))
-		for eid := range guo.removedChannels {
-			eids = append(eids, eid)
-		}
-		query, args := builder.Update(guild.ChannelsTable).
-			SetNull(guild.ChannelsColumn).
-			Where(sql.InInts(guild.ChannelsColumn, ids...)).
-			Where(sql.InInts(guildchannel.FieldID, eids...)).
-			Query()
-		if err := tx.Exec(ctx, query, args, &res); err != nil {
-			return nil, rollback(tx, err)
-		}
-	}
-	if len(guo.channels) > 0 {
-		for _, id := range ids {
-			p := sql.P()
-			for eid := range guo.channels {
-				p.Or().EQ(guildchannel.FieldID, eid)
-			}
-			query, args := builder.Update(guild.ChannelsTable).
-				Set(guild.ChannelsColumn, id).
-				Where(sql.And(p, sql.IsNull(guild.ChannelsColumn))).
-				Query()
-			if err := tx.Exec(ctx, query, args, &res); err != nil {
-				return nil, rollback(tx, err)
-			}
-			affected, err := res.RowsAffected()
-			if err != nil {
-				return nil, rollback(tx, err)
-			}
-			if int(affected) < len(guo.channels) {
-				return nil, rollback(tx, &ErrConstraintFailed{msg: fmt.Sprintf("one of \"channels\" %v already connected to a different \"Guild\"", keys(guo.channels))})
-			}
-		}
-	}
-	if len(guo.removedBank) > 0 {
-		eids := make([]int, len(guo.removedBank))
-		for eid := range guo.removedBank {
-			eids = append(eids, eid)
-		}
+	if guo.clearedBank {
 		query, args := builder.Update(guild.BankTable).
 			SetNull(guild.BankColumn).
-			Where(sql.InInts(guild.BankColumn, ids...)).
-			Where(sql.InInts(bankitem.FieldID, eids...)).
+			Where(sql.InInts(guildbank.FieldID, ids...)).
 			Query()
 		if err := tx.Exec(ctx, query, args, &res); err != nil {
 			return nil, rollback(tx, err)
@@ -487,13 +300,10 @@ func (guo *GuildUpdateOne) sqlSave(ctx context.Context) (gu *Guild, err error) {
 	}
 	if len(guo.bank) > 0 {
 		for _, id := range ids {
-			p := sql.P()
-			for eid := range guo.bank {
-				p.Or().EQ(bankitem.FieldID, eid)
-			}
+			eid := keys(guo.bank)[0]
 			query, args := builder.Update(guild.BankTable).
 				Set(guild.BankColumn, id).
-				Where(sql.And(p, sql.IsNull(guild.BankColumn))).
+				Where(sql.EQ(guildbank.FieldID, eid).And().IsNull(guild.BankColumn)).
 				Query()
 			if err := tx.Exec(ctx, query, args, &res); err != nil {
 				return nil, rollback(tx, err)

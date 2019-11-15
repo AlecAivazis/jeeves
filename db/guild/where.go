@@ -254,39 +254,6 @@ func DiscordIDContainsFold(v string) predicate.Guild {
 	)
 }
 
-// HasChannels applies the HasEdge predicate on the "channels" edge.
-func HasChannels() predicate.Guild {
-	return predicate.Guild(
-		func(s *sql.Selector) {
-			t1 := s.Table()
-			builder := sql.Dialect(s.Dialect())
-			s.Where(
-				sql.In(
-					t1.C(FieldID),
-					builder.Select(ChannelsColumn).
-						From(builder.Table(ChannelsTable)).
-						Where(sql.NotNull(ChannelsColumn)),
-				),
-			)
-		},
-	)
-}
-
-// HasChannelsWith applies the HasEdge predicate on the "channels" edge with a given conditions (other predicates).
-func HasChannelsWith(preds ...predicate.GuildChannel) predicate.Guild {
-	return predicate.Guild(
-		func(s *sql.Selector) {
-			builder := sql.Dialect(s.Dialect())
-			t1 := s.Table()
-			t2 := builder.Select(ChannelsColumn).From(builder.Table(ChannelsTable))
-			for _, p := range preds {
-				p(t2)
-			}
-			s.Where(sql.In(t1.C(FieldID), t2))
-		},
-	)
-}
-
 // HasBank applies the HasEdge predicate on the "bank" edge.
 func HasBank() predicate.Guild {
 	return predicate.Guild(
@@ -306,7 +273,7 @@ func HasBank() predicate.Guild {
 }
 
 // HasBankWith applies the HasEdge predicate on the "bank" edge with a given conditions (other predicates).
-func HasBankWith(preds ...predicate.BankItem) predicate.Guild {
+func HasBankWith(preds ...predicate.GuildBank) predicate.Guild {
 	return predicate.Guild(
 		func(s *sql.Selector) {
 			builder := sql.Dialect(s.Dialect())

@@ -36,13 +36,8 @@ func (gu *Guild) FromRows(rows *sql.Rows) error {
 	return nil
 }
 
-// QueryChannels queries the channels edge of the Guild.
-func (gu *Guild) QueryChannels() *GuildChannelQuery {
-	return (&GuildClient{gu.config}).QueryChannels(gu)
-}
-
 // QueryBank queries the bank edge of the Guild.
-func (gu *Guild) QueryBank() *BankItemQuery {
+func (gu *Guild) QueryBank() *GuildBankQuery {
 	return (&GuildClient{gu.config}).QueryBank(gu)
 }
 

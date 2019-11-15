@@ -9,7 +9,7 @@ import (
 	"math"
 
 	"github.com/AlecAivazis/jeeves/db/bankitem"
-	"github.com/AlecAivazis/jeeves/db/guild"
+	"github.com/AlecAivazis/jeeves/db/guildbank"
 	"github.com/AlecAivazis/jeeves/db/predicate"
 	"github.com/facebookincubator/ent/dialect/sql"
 )
@@ -50,18 +50,18 @@ func (biq *BankItemQuery) Order(o ...Order) *BankItemQuery {
 	return biq
 }
 
-// QueryGuild chains the current query on the guild edge.
-func (biq *BankItemQuery) QueryGuild() *GuildQuery {
-	query := &GuildQuery{config: biq.config}
+// QueryBank chains the current query on the bank edge.
+func (biq *BankItemQuery) QueryBank() *GuildBankQuery {
+	query := &GuildBankQuery{config: biq.config}
 
 	builder := sql.Dialect(biq.driver.Dialect())
-	t1 := builder.Table(guild.Table)
+	t1 := builder.Table(guildbank.Table)
 	t2 := biq.sqlQuery()
-	t2.Select(t2.C(bankitem.GuildColumn))
-	query.sql = builder.Select(t1.Columns(guild.Columns...)...).
+	t2.Select(t2.C(bankitem.BankColumn))
+	query.sql = builder.Select(t1.Columns(guildbank.Columns...)...).
 		From(t1).
 		Join(t2).
-		On(t1.C(guild.FieldID), t2.C(bankitem.GuildColumn))
+		On(t1.C(guildbank.FieldID), t2.C(bankitem.BankColumn))
 	return query
 }
 

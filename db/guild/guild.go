@@ -12,18 +12,11 @@ const (
 
 	// Table holds the table name of the guild in the database.
 	Table = "guilds"
-	// ChannelsTable is the table the holds the channels relation/edge.
-	ChannelsTable = "guild_channels"
-	// ChannelsInverseTable is the table name for the GuildChannel entity.
-	// It exists in this package in order to avoid circular dependency with the "guildchannel" package.
-	ChannelsInverseTable = "guild_channels"
-	// ChannelsColumn is the table column denoting the channels relation/edge.
-	ChannelsColumn = "guild_id"
 	// BankTable is the table the holds the bank relation/edge.
-	BankTable = "bank_items"
-	// BankInverseTable is the table name for the BankItem entity.
-	// It exists in this package in order to avoid circular dependency with the "bankitem" package.
-	BankInverseTable = "bank_items"
+	BankTable = "guild_banks"
+	// BankInverseTable is the table name for the GuildBank entity.
+	// It exists in this package in order to avoid circular dependency with the "guildbank" package.
+	BankInverseTable = "guild_banks"
 	// BankColumn is the table column denoting the bank relation/edge.
 	BankColumn = "guild_id"
 )

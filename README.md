@@ -14,32 +14,15 @@ for your guild including:
 
 - Guild Bank
 
-## Setup
-
-### Channel Roles
-
-Jeeves works across many channels in your guild. Once you have invited Jeeves to your guild, you
-must assign the neccessary channels for each feature to work. In order to assign a channel, navigate
-to the appropriate channel and type `!jeeves-assign-channel <role>`.
-
-| Channel Role | Usage                                                                                    |
-| ------------ | ---------------------------------------------------------------------------------------- |
-| bank         | The channel that will have the summary of the bank                                       |
-| bank-log     | The channel that the bank manager will use to record items moving in and out of the bank |
-
-### User Roles
-
-Most guilds want to limit restrict certain actions like managing the guild bank to a subset of users.
-Jeeves relies on Discord's Role system to enforce these restrictions. When Jeeves is first added to your
-guild, it will create the necessary roles.
-
-| Role Name | Permissions                                           |
-| --------- | ----------------------------------------------------- |
-| Banker    | Allowed to record items moving in and out of the bank |
-
 ## Guild Bank
 
-Jeeves will track items as they move in and out of your guild's various bank alts. At the moment, there is
-no in-game addon to aid this process. If something like that would interest you, please open an issue!
+### Setup
 
-Once you have assigned the `bank` and `bank-log` roles,
+Before Jeeves can track your guild bank's contents, you must tell him where he can display what is
+inside of your bank. To do this, say `!jeeves-assign-bank` inside of the desired channel.
+Once you see a confirmation from Jeeves, we reccomend deleting the messages that accumulated
+during setup to keep things tidy.
+
+#### Depositing Items
+
+#### Withdrawing Items

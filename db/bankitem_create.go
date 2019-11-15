@@ -16,7 +16,7 @@ type BankItemCreate struct {
 	config
 	itemID   *string
 	quantity *int
-	guild    map[int]struct{}
+	bank     map[int]struct{}
 }
 
 // SetItemID sets the itemID field.
@@ -31,26 +31,26 @@ func (bic *BankItemCreate) SetQuantity(i int) *BankItemCreate {
 	return bic
 }
 
-// SetGuildID sets the guild edge to Guild by id.
-func (bic *BankItemCreate) SetGuildID(id int) *BankItemCreate {
-	if bic.guild == nil {
-		bic.guild = make(map[int]struct{})
+// SetBankID sets the bank edge to GuildBank by id.
+func (bic *BankItemCreate) SetBankID(id int) *BankItemCreate {
+	if bic.bank == nil {
+		bic.bank = make(map[int]struct{})
 	}
-	bic.guild[id] = struct{}{}
+	bic.bank[id] = struct{}{}
 	return bic
 }
 
-// SetNillableGuildID sets the guild edge to Guild by id if the given value is not nil.
-func (bic *BankItemCreate) SetNillableGuildID(id *int) *BankItemCreate {
+// SetNillableBankID sets the bank edge to GuildBank by id if the given value is not nil.
+func (bic *BankItemCreate) SetNillableBankID(id *int) *BankItemCreate {
 	if id != nil {
-		bic = bic.SetGuildID(*id)
+		bic = bic.SetBankID(*id)
 	}
 	return bic
 }
 
-// SetGuild sets the guild edge to Guild.
-func (bic *BankItemCreate) SetGuild(g *Guild) *BankItemCreate {
-	return bic.SetGuildID(g.ID)
+// SetBank sets the bank edge to GuildBank.
+func (bic *BankItemCreate) SetBank(g *GuildBank) *BankItemCreate {
+	return bic.SetBankID(g.ID)
 }
 
 // Save creates the BankItem in the database.
@@ -64,8 +64,8 @@ func (bic *BankItemCreate) Save(ctx context.Context) (*BankItem, error) {
 	if err := bankitem.QuantityValidator(*bic.quantity); err != nil {
 		return nil, fmt.Errorf("db: validator failed for field \"quantity\": %v", err)
 	}
-	if len(bic.guild) > 1 {
-		return nil, errors.New("db: multiple assignments on a unique edge \"guild\"")
+	if len(bic.bank) > 1 {
+		return nil, errors.New("db: multiple assignments on a unique edge \"bank\"")
 	}
 	return bic.sqlSave(ctx)
 }
@@ -103,10 +103,10 @@ func (bic *BankItemCreate) sqlSave(ctx context.Context) (*BankItem, error) {
 		return nil, rollback(tx, err)
 	}
 	bi.ID = int(id)
-	if len(bic.guild) > 0 {
-		for eid := range bic.guild {
-			query, args := builder.Update(bankitem.GuildTable).
-				Set(bankitem.GuildColumn, eid).
+	if len(bic.bank) > 0 {
+		for eid := range bic.bank {
+			query, args := builder.Update(bankitem.BankTable).
+				Set(bankitem.BankColumn, eid).
 				Where(sql.EQ(bankitem.FieldID, id)).
 				Query()
 			if err := tx.Exec(ctx, query, args, &res); err != nil {

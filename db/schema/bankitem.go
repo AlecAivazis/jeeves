@@ -22,6 +22,6 @@ func (BankItem) Fields() []ent.Field {
 // Edges of the BankItem.
 func (BankItem) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("guild", Guild.Type).Ref("bank").Unique(),
+		edge.From("bank", GuildBank.Type).Ref("items").Unique(),
 	}
 }
