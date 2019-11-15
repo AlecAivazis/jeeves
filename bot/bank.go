@@ -116,19 +116,11 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 		if len(existingItems) == 0 {
 			fmt.Println("Havent seen this one yet!")
 			// create a bank item entry
-			item, err := b.Database.BankItem.Create().
+			_, err := b.Database.BankItem.Create().
 				SetItemID(item).
 				SetQuantity(0).
+				SetBank(guildBank).
 				Save(ctx)
-			if err != nil {
-				return err
-			}
-
-			// add the item to the guild bank
-			err = b.Database.GuildBank.Update().
-				Where(guildbank.ID(guildBank.ID)).
-				AddItems(item).
-				Exec(ctx)
 			if err != nil {
 				return err
 			}
