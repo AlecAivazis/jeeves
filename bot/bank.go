@@ -253,7 +253,7 @@ func init() {
 
 func properTitle(input string) string {
 	words := strings.Fields(input)
-	smallwords := " a an on the to "
+	smallwords := " a an on the of to "
 
 	for index, word := range words {
 		if strings.Contains(smallwords, " "+word+" ") {
