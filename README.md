@@ -20,14 +20,14 @@ Before Jeeves can track your guild bank's contents, you must tell him where he c
 inside of your bank. To do this, an admin has to say `!jeeves-assign-bank` inside of the desired channel.
 
 Note: Jeeves will also create the `Banker` role if your discord doesn't have it. You can assign this role to users
-that you want to be able to move items in and out of the bank, without elevating them to an Admin.
+that you want to be able to move items in and out of the bank, without elevating them to an `Admin`.
 
 ### Commands
 
-A `Banker` can interact with Jeeves through a few different commands summarized below. Note that item names are 
+A `Banker` can interact with Jeeves through a few different commands summarized below. Note that item names are
 not case-sensitive but the command name is. So, `!deposit lava core` works but `!DEPOSIT Lava Core` does not work.
 
 | Command  | Description                       | Example                                 |
-|----------|-----------------------------------|-----------------------------------------|
+| -------- | --------------------------------- | --------------------------------------- |
 | deposit  | Adds items to the guild bank      | `!deposit Lava Core, 2x Righteous Orb`  |
 | withdraw | Removes items from the guild bank | `!withdraw Lava Core, 2x Righteous Orb` |
