@@ -5,6 +5,7 @@ package bot
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 
 	"github.com/AlecAivazis/jeeves/db"
@@ -161,7 +162,7 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Println(contents.String())
 	// update the display message with the items
 	_, err = b.Discord.ChannelMessageEdit(bank.ChannelID, bank.DisplayMessageID, contents.String())
 	if err != nil {
