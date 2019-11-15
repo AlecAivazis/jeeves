@@ -362,12 +362,21 @@ var displayTemplate *template.Template
 const BankDisplayContents = `
 Bank Contents:
 {{- range .Items }}
-{{ .Quantity}}x {{ properTitle .ItemID }}
+{{ .Quantity}}x {{ itemName .ItemID }}
 {{- end }}
 `
 
 func init() {
 	displayTemplate = template.Must(template.New("bank-display").Funcs(template.FuncMap{
-		"properTitle": properTitle,
+		"itemName": func(id string) string {/
+			// if the id is something we recognize
+			if name, ok := itemNames[id]; ok {
+				return name
+			}
+
+			// backwards compatability is hard
+			return id
+
+		},
 	}).Parse(BankDisplayContents))
 }
