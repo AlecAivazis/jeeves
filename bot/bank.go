@@ -5,10 +5,10 @@ package bot
 
 import (
 	"bytes"
-	"html/template"
-	"strings"
-	"strconv"
 	"fmt"
+	"html/template"
+	"strconv"
+	"strings"
 
 	"github.com/AlecAivazis/jeeves/db"
 	"github.com/AlecAivazis/jeeves/db/bankitem"
@@ -29,6 +29,11 @@ const (
 const (
 	// RoleBanker defines the public name of the role to give non-admin users permissions to modify the bank
 	RoleBanker = "Banker"
+)
+
+const (
+	// QuantityDelimiter is the character that separates the amount from the item. Ie, "x" in 2xLava Core
+	QuantityDelimiter = 'x'
 )
 
 type Transaction struct {
@@ -138,13 +143,7 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 }
 
 // DepositItems is used when the user wants to deposit the specified items into the bank. Will update the display message.
-func (b *JeevesBot) DepositItems(ctx *CommandContext, itemNames []string) error {
-	// figure out the item ids
-	items, err := itemIDsFromNames(itemNames)
-	if err != nil {
-		return err
-	}
-
+func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 	// find the bank for this guild
 	guildBank, err := b.GuildBank(ctx)
 	if err != nil {
@@ -241,43 +240,24 @@ func (b *JeevesBot) GuildBank(ctx *CommandContext) (*db.GuildBank, error) {
 		Only(ctx)
 }
 
-func itemIDsFromNames(names []string) ([]string, error) {
-	return names, nil
-}
-
 type bankDisplayData struct {
 	Items []*db.BankItem
 }
 
-var displayTemplate *template.Template
-
-// BankDisplayContents is the template used by jeeves to show what's in the bank
-const BankDisplayContents = `
-Bank Contents:
-{{- range .Items }}
-{{ .Quantity}}x {{ properTitle .ItemID }}
-{{- end }}
-`
-
-func init() {
-	displayTemplate = template.Must(template.New("bank-display").Funcs(template.FuncMap{
-		"properTitle": properTitle,
-	}).Parse(BankDisplayContents))
-}
-
 const numbers = "1234567890"
 
+// ParseTransaction takes a string like "2xLava Core" and extracts the quantity and item referenced
 func ParseTransaction(entry string) (Transaction, error) {
 	// get the name ready and normalized
 	item := strings.ToLower(strings.Trim(entry, " "))
 
 	// the transaction to return
 	transaction := Transaction{
-		Item: item,
+		Item:   item,
 		Amount: 1,
 	}
 
-	// if the first letter does not parse to an int, there is no quantity 
+	// if the first letter does not parse to an int, there is no quantity
 	if !strings.Contains(numbers, string(item[0])) {
 		// we're done
 		return transaction, nil
@@ -292,15 +272,14 @@ func ParseTransaction(entry string) (Transaction, error) {
 		if strings.Contains(numbers, string(char)) {
 			amount += string(char)
 
-		// we ran into the quantity delimiter
-		} else if char == 'x' {
+			// we ran into the quantity delimiter
+		} else if char == QuantityDelimiter {
 			// the rest of the entry is the item name
 			itemName = strings.Trim(item[i+1:], " ")
-
 			// we're done here
 			break
 
-		// an unexpected character
+			// an unexpected character
 		} else {
 			return transaction, fmt.Errorf("Unexpected character '%v' in transaction %s", char, item)
 		}
@@ -319,4 +298,20 @@ func ParseTransaction(entry string) (Transaction, error) {
 
 	// we're done
 	return transaction, nil
+}
+
+var displayTemplate *template.Template
+
+// BankDisplayContents is the template used by jeeves to show what's in the bank
+const BankDisplayContents = `
+Bank Contents:
+{{- range .Items }}
+{{ .Quantity}}x {{ properTitle .ItemID }}
+{{- end }}
+`
+
+func init() {
+	displayTemplate = template.Must(template.New("bank-display").Funcs(template.FuncMap{
+		"properTitle": properTitle,
+	}).Parse(BankDisplayContents))
 }
