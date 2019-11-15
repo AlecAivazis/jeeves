@@ -160,8 +160,7 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 		amount := transaction.Amount
 
 		// does this bank have a record for the item
-		existingItems, err := b.Database.GuildBank.Query().
-			Where(guildbank.ID(guildBank.ID)).
+		existingItems, err := guildBank.
 			QueryItems().
 			Where(bankitem.ItemID(item)).
 			All(ctx)
@@ -175,11 +174,22 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 			return errors.New("it does not look like we have that item in the bank")
 		}
 
-		// we are adding an item to an existing record in the bank
-		err = b.Database.BankItem.Update().
-			Where(bankitem.ID(existingItems[0].ID)).
-			AddQuantity(-amount).
-			Exec(ctx)
+		// make sure there are enough items in the bank
+		if amount > existingItems[0].Quantity {
+			return errors.New("there is not enough of that item in the bank")
+		}
+
+		// if withdrawing this item will take its quantity to zero
+		if amount == existingItems[0].Quantity {
+			// just remove it from the database
+			err = b.Database.BankItem.DeleteOneID(existingItems[0].ID).Exec(ctx)
+		} else {
+			// update the existing record
+			err = existingItems[0].Update().
+				AddQuantity(-amount).
+				Exec(ctx)
+		}
+
 		if err != nil {
 			return err
 		}
@@ -213,8 +223,7 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 		fmt.Println("Depositing", amount, "of", item)
 
 		// does this bank have a record for the item
-		existingItems, err := b.Database.GuildBank.Query().
-			Where(guildbank.ID(guildBank.ID)).
+		existingItems, err := guildBank.
 			QueryItems().
 			Where(bankitem.ItemID(item)).
 			All(ctx)
