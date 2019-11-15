@@ -6,6 +6,7 @@ package bot
 import (
 	"bytes"
 	"html/template"
+	"strings"
 
 	"github.com/AlecAivazis/jeeves/db"
 	"github.com/AlecAivazis/jeeves/db/bankitem"
@@ -144,7 +145,10 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, itemNames []string) error 
 	}
 
 	// we need to add each item to the database
-	for _, item := range items {
+	for _, itemName := range items {
+		// get the name ready and normalized
+		item := strings.ToLower(strings.Trim(itemName, " "))
+
 		// does this bank have a record for the item
 		existingItems, err := b.Database.GuildBank.Query().
 			Where(guildbank.ID(guildBank.ID)).
