@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -251,37 +252,6 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 	return b.UpdateBankListing(ctx)
 }
 
-func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
-	// find the channel ID for the bank channel for this guild
-	bank, err := b.GuildBank(ctx)
-	if err != nil {
-		return err
-	}
-
-	// get the items in the bank
-	items, err := b.Database.GuildBank.Query().Where(guildbank.ID(bank.ID)).QueryItems().All(ctx)
-	if err != nil {
-		return err
-	}
-
-	// execute the template
-	var contents bytes.Buffer
-	err = displayTemplate.Execute(&contents, &bankDisplayData{
-		Items: items,
-	})
-	if err != nil {
-		return err
-	}
-	// update the display message with the items
-	_, err = b.Discord.ChannelMessageEdit(bank.ChannelID, bank.DisplayMessageID, contents.String())
-	if err != nil {
-		return err
-	}
-
-	// nothing went wrong
-	return nil
-}
-
 // GuildBank returns the build bank object associated with the current context
 func (b *JeevesBot) GuildBank(ctx *CommandContext) (*db.GuildBank, error) {
 	return b.Database.GuildBank.Query().
@@ -354,6 +324,56 @@ func ParseTransaction(entry string) (Transaction, error) {
 
 	// we're done
 	return transaction, nil
+}
+
+//////////////////////////////////
+//
+// Guild Bank Display
+//
+//////////////////////////////////
+
+// UpdateBankListing is called whenever jeeves needs to rerender the bank display
+func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
+	// find the channel ID for the bank channel for this guild
+	bank, err := b.GuildBank(ctx)
+	if err != nil {
+		return err
+	}
+
+	// get the items in the bank
+	items, err := b.Database.GuildBank.Query().
+		Where(guildbank.ID(bank.ID)).
+		QueryItems().All(ctx)
+	if err != nil {
+		return err
+	}
+
+	// sort the items based on their display name
+	sort.SliceStable(items, func(i, j int) bool {
+		// figure out the display names of the two items
+		nameA, _ := ItemID(items[i].ItemID)
+		nameB, _ := ItemID(items[j].ItemID)
+
+		// i should come before j if i's name is less than j
+		return nameA < nameB
+	})
+
+	// execute the template
+	var contents bytes.Buffer
+	err = displayTemplate.Execute(&contents, &bankDisplayData{
+		Items: items,
+	})
+	if err != nil {
+		return err
+	}
+	// update the display message with the items
+	_, err = b.Discord.ChannelMessageEdit(bank.ChannelID, bank.DisplayMessageID, contents.String())
+	if err != nil {
+		return err
+	}
+
+	// nothing went wrong
+	return nil
 }
 
 var displayTemplate *template.Template
