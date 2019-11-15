@@ -241,10 +241,26 @@ var displayTemplate *template.Template
 const BankDisplayContents = `
 Bank Contents:
 {{- range .Items }}
-{{ .Quantity}}x {{ .ItemID }}
+{{ .Quantity}}x {{ properTitle .ItemID }}
 {{- end }}
 `
 
 func init() {
-	displayTemplate = template.Must(template.New("bank-display").Parse(BankDisplayContents))
+	displayTemplate = template.Must(template.New("bank-display").Funcs(template.FuncMap{
+		"properTitle": properTitle,
+	}).Parse(BankDisplayContents))
+}
+
+func properTitle(input string) string {
+	words := strings.Fields(input)
+	smallwords := " a an on the to "
+
+	for index, word := range words {
+		if strings.Contains(smallwords, " "+word+" ") {
+			words[index] = word
+		} else {
+			words[index] = strings.Title(word)
+		}
+	}
+	return strings.Join(words, " ")
 }
