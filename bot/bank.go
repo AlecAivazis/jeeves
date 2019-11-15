@@ -47,13 +47,13 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 	// look if we have an existing record for the bank
 	previousRecord, err := b.Database.GuildBank.Query().
 		Where(wherePredicates...).
-		First(ctx)
+		All(ctx)
 	if err != nil {
 		return err
 	}
 
 	// if we have never recorded a bank for this guild
-	if previousRecord == nil {
+	if len(previousRecord) == 0 {
 		// grab the guild from context
 		guild, err := b.GuildFromContext(ctx)
 		if err != nil {
