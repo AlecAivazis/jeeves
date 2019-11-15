@@ -188,11 +188,10 @@ var displayTemplate *template.Template
 
 // BankDisplayContents is the template used by jeeves to show what's in the bank
 const BankDisplayContents = `
-	Bank Contents:
-	
-	{{- range .Items -}}
-	{{ .Quantity}}x {{ .ItemID }}
-    {{- end -}}
+Bank Contents:
+{{- range .Items }}
+{{ .Quantity}}x {{ .ItemID }}
+{{- end }}
 `
 
 func init() {

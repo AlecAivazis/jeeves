@@ -35,7 +35,7 @@ func Start() {
 	defer dg.Close()
 
 	// open up a client with the configured values
-	client, err := db.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s", DBHost, DBPort, DBUser, DBPassword, DBName))
+	client, err := db.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", DBHost, DBPort, DBUser, DBPassword, DBName))
 	if err != nil {
 		panic(err)
 	}

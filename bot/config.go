@@ -11,11 +11,11 @@ import (
 var BotToken string
 
 // DB configuration
-var DBHost string
-var DBName string
-var DBPort string
-var DBUser string
-var DBPassword string
+var DBHost = "localhost"
+var DBName = "prisma"
+var DBPort = "5432"
+var DBUser = "prisma"
+var DBPassword = "prisma"
 
 func init() {
 	err := godotenv.Load()
