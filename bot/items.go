@@ -11745,7 +11745,7 @@ var itemNumbers = map[string]int{
 	"Hardpacked Snowball":                                 21038,
 }
 
-var itemNames map[string]string
+var itemNames = map[string]string{}
 
 // ItemID returns the WoW item ID for the item with the given name
 func ItemID(name string) (string, error) {
