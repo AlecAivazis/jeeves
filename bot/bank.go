@@ -24,6 +24,11 @@ const (
 	CommandAssignBankChannel = "jeeves-assign-bank"
 )
 
+const (
+	// RoleBanker defines the public name of the role to give non-admin users permissions to modify the bank
+	RoleBanker = "Banker"
+)
+
 // InitializeBankChannel is called when the user intends to assign a channel for use to display the bank
 func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 	// confirm the action with the user
@@ -31,8 +36,42 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 	if err != nil {
 		return err
 	}
+
+	// if we haven't defined the banker role yet
+	roles, err := b.Discord.GuildRoles(ctx.GuildID)
+	if err != nil {
+		return err
+	}
+	definedBanker := false
+	for _, role := range roles {
+		if role.Name == RoleBanker {
+			definedBanker = true
+			break
+		}
+	}
+	// if we have to define the banker role now
+	if !definedBanker {
+		// tell the user about it
+		_, err = b.Discord.ChannelMessageSend(ctx.ChannelID, "I am creating the Banker role. Assign this to non-Admin users you want"+
+			" to give permission to move items in and out of the bank.")
+		if err != nil {
+			return err
+		}
+
+		// create the role
+		role, err := b.Discord.GuildRoleCreate(ctx.GuildID)
+		if err != nil {
+			return err
+		}
+		// edit the role we just made (not sure why we couldn't do this when we created it to begin with...)
+		_, err = b.Discord.GuildRoleEdit(ctx.GuildID, role.ID, RoleBanker, role.Color, role.Hoist, role.Permissions, role.Mentionable)
+		if err != nil {
+			return err
+		}
+	}
+
 	// send the display message now so they know what they can delete
-	display, err := b.Discord.ChannelMessageSend(ctx.ChannelID, "Your guild bank's contents will go here. You are free to"+
+	display, err := b.Discord.ChannelMessageSend(ctx.ChannelID, "All set! Your guild bank's contents will go here. You are free to"+
 		" delete any other message in this channel but please do not delete this message. I will update it as your bankers"+
 		" add items to the bank.")
 	if err != nil {
