@@ -5,7 +5,6 @@ package bot
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 
 	"github.com/AlecAivazis/jeeves/db"
@@ -131,7 +130,13 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 }
 
 // DepositItems is used when the user wants to deposit the specified items into the bank. Will update the display message.
-func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
+func (b *JeevesBot) DepositItems(ctx *CommandContext, itemNames []string) error {
+	// figure out the item ids
+	items, err := itemIDsFromNames(itemNames)
+	if err != nil {
+		return err
+	}
+
 	// find the bank for this guild
 	guildBank, err := b.GuildBank(ctx)
 	if err != nil {
@@ -201,7 +206,6 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(contents.String())
 	// update the display message with the items
 	_, err = b.Discord.ChannelMessageEdit(bank.ChannelID, bank.DisplayMessageID, contents.String())
 	if err != nil {
@@ -217,6 +221,10 @@ func (b *JeevesBot) GuildBank(ctx *CommandContext) (*db.GuildBank, error) {
 	return b.Database.GuildBank.Query().
 		Where(guildbank.HasGuildWith(guild.DiscordID(ctx.GuildID))).
 		Only(ctx)
+}
+
+func itemIDsFromNames(names []string) ([]string, error) {
+	return names, nil
 }
 
 type bankDisplayData struct {

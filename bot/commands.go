@@ -22,9 +22,9 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 	}
 
 	// since the message is presumably text, we care about words, not letters
-	words := strings.Split(message.Content[1:], " ")
+	words := strings.SplitN(message.Content[1:], " ", 1)
 	command := words[0]
-	args := words[1:]
+	args := words[1]
 
 	// construct the context object
 	ctx := &CommandContext{
@@ -39,9 +39,9 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 	case CommandAssignBankChannel:
 		err = b.InitializeBankChannel(ctx)
 	case CommandDeposit:
-		err = b.DepositItems(ctx, args)
+		err = b.DepositItems(ctx, strings.Split(args, ","))
 	case CommandWithdraw:
-		err = b.WithdrawItems(ctx, args)
+		err = b.WithdrawItems(ctx, strings.Split(args, ","))
 	}
 	// if the command failed
 	if err != nil {
