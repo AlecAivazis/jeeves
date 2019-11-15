@@ -47,7 +47,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 	// look if we have an existing record for the bank
 	previousRecord, err := b.Database.GuildBank.Query().
 		Where(wherePredicates...).
-		Only(ctx)
+		First(ctx)
 	if err != nil {
 		return err
 	}
