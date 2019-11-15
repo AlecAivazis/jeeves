@@ -41,4 +41,4 @@ Withdrawing items looks very similar to depositing:
 !withdraw Lava Core, 2x Righteous Orb
 ```
 
-NOTE: item names are not case-sensitive but the command is, so `!deposit lava core` would have also worked.
+NOTE: item names are not case-sensitive but the command is, so `!withdraw lava core` would have also worked.
