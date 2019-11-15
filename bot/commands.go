@@ -22,7 +22,7 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 	}
 
 	// since the message is presumably text, we care about words, not letters
-	words := strings.SplitN(message.Content[1:], " ", 1)
+	words := strings.SplitN(message.Content[1:], " ", 2)
 	command := words[0]
 
 	// construct the context object
