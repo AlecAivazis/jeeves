@@ -14,7 +14,7 @@ type BankItem struct {
 // Fields of the BankItem.
 func (BankItem) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("itemID").Unique(),
+		field.String("itemID"),
 		field.Int("quantity").Positive(),
 	}
 }
