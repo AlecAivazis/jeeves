@@ -1,4 +1,3 @@
-// // Jeeve's bank features are summarized with the following commands:
 // !deposit 1xA 2xB C - adds one A, two B, and one C to the guild's bank
 // !withdraw 1xA 2xB C (for arcanite reaper) - removes one A, two B, and one C to the guild's bank with the provided note
 
@@ -6,7 +5,6 @@ package bot
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 
 	"github.com/AlecAivazis/jeeves/db"
@@ -114,7 +112,6 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 
 		// if we haven't seen the item before
 		if len(existingItems) == 0 {
-			fmt.Println("Havent seen this one yet!")
 			// create a bank item entry
 			_, err := b.Database.BankItem.Create().
 				SetItemID(item).
@@ -128,8 +125,6 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 			// we're done processing this item
 			continue
 		}
-
-		fmt.Println("pshhh whatever that's old news")
 
 		// we are adding an item to an existing record in the bank
 		err = b.Database.BankItem.Update().
@@ -168,7 +163,7 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	}
 
 	// update the display message with the items
-	_, err = b.Discord.ChannelMessageEdit(ctx.ChannelID, bank.DisplayMessageID, contents.String())
+	_, err = b.Discord.ChannelMessageEdit(bank.ChannelID, bank.DisplayMessageID, contents.String())
 	if err != nil {
 		return err
 	}
