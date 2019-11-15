@@ -24,22 +24,11 @@ that you want to be able to move items in and out of the bank, without elevating
 
 #### Depositing Items
 
-Depositing an item is done by sending a message of the form:
+Depositing an item is done by sending a message of the following form. You can deposit multiple items (separated by `,`)
+as well as multiple amounts of each item:
 
 ```
-!deposit Lava Core
-```
-
-You can deposit multiple items:
-
-```
-!deposit Lava Core, Righteous Orb
-```
-
-As well as multiple quantities of items (specifying `1x` is optional):
-
-```
-!deposit 3x Lava Core, 2xRighteous Orb
+!deposit Lava Core, 2x Righteous Orb
 ```
 
 NOTE: item names are not case-sensitive but the command is, so `!deposit lava core` would have also worked.
@@ -49,19 +38,7 @@ NOTE: item names are not case-sensitive but the command is, so `!deposit lava co
 Withdrawing items looks very similar to depositing:
 
 ```
-!withdraw Lava Core
+!withdraw Lava Core, 2x Righteous Orb
 ```
 
-You can withdraw multiple items:
-
-```
-!withdraw Lava Core, Righteous Orb
-```
-
-As well as multiple quantities of items (specifying `1x` is optional):
-
-```
-!withdraw 3x Lava Core, 2xRighteous Orb
-```
-
-NOTE: item names are not case-sensitive but the command is, so `!withdraw lava core` would have also worked.
+NOTE: item names are not case-sensitive but the command is, so `!deposit lava core` would have also worked.
