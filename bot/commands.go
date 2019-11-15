@@ -38,9 +38,15 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 	case CommandAssignBankChannel:
 		err = b.InitializeBankChannel(ctx)
 	case CommandDeposit:
-		err = b.DepositItems(ctx, strings.Split(words[1], ","))
+		// there could be trailing white space around the word
+		trimmed := strings.Trim(words[1], ", ")
+
+		err = b.DepositItems(ctx, strings.Split(trimmed, ","))
 	case CommandWithdraw:
-		err = b.WithdrawItems(ctx, strings.Split(words[1], ","))
+		// there could be trailing white space around the word
+		trimmed := strings.Trim(words[1], ", ")
+
+		err = b.WithdrawItems(ctx, strings.Split(trimmed, ","))
 	}
 	// if the command failed
 	if err != nil {
