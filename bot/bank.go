@@ -368,7 +368,7 @@ Bank Contents:
 
 func init() {
 	displayTemplate = template.Must(template.New("bank-display").Funcs(template.FuncMap{
-		"itemName": func(id string) string {/
+		"itemName": func(id string) string {
 			// if the id is something we recognize
 			if name, ok := itemNames[id]; ok {
 				return name
