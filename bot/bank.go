@@ -209,6 +209,8 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 		item := transaction.Item
 		amount := transaction.Amount
 
+		fmt.Println("Depositing", amount, "of", item)
+
 		// does this bank have a record for the item
 		existingItems, err := b.Database.GuildBank.Query().
 			Where(guildbank.ID(guildBank.ID)).
