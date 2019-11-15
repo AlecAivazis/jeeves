@@ -5,6 +5,7 @@ package bot
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"strconv"
@@ -139,6 +140,52 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 
 // WithdrawItems is used when the user wants to withdraw the specified items from the bank. Will update the display message.
 func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
+	// find the bank for this guild
+	guildBank, err := b.GuildBank(ctx)
+	if err != nil {
+		return err
+	}
+
+	// we need to add each item to the database
+	for _, item := range items {
+		// get the transaction record
+		transaction, err := ParseTransaction(item)
+		if err != nil {
+			return err
+		}
+
+		// pull out the constants of the transaction
+		item := transaction.Item
+		amount := transaction.Amount
+
+		// does this bank have a record for the item
+		existingItems, err := b.Database.GuildBank.Query().
+			Where(guildbank.ID(guildBank.ID)).
+			QueryItems().
+			Where(bankitem.ItemID(item)).
+			All(ctx)
+		if err != nil {
+			return err
+		}
+
+		// if we haven't seen the item before
+		if len(existingItems) == 0 {
+			// we can't withdraw it!
+			return errors.New("it does not look like we have that item in the bank")
+		}
+
+		// we are adding an item to an existing record in the bank
+		err = b.Database.BankItem.Update().
+			Where(bankitem.ID(existingItems[0].ID)).
+			AddQuantity(-amount).
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	// once we are done adding the items we should update the listing
+	return b.UpdateBankListing(ctx)
 	return nil
 }
 
@@ -281,7 +328,7 @@ func ParseTransaction(entry string) (Transaction, error) {
 
 			// an unexpected character
 		} else {
-			return transaction, fmt.Errorf("Unexpected character '%v' in transaction %s", char, item)
+			return transaction, fmt.Errorf("there was an unexpected character '%v' in transaction %s", char, item)
 		}
 	}
 
