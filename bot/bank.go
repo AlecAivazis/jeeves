@@ -5,8 +5,8 @@
 package bot
 
 import (
+	"bytes"
 	"html/template"
-	"os"
 
 	"github.com/AlecAivazis/jeeves/db"
 	"github.com/AlecAivazis/jeeves/db/bankitem"
@@ -102,17 +102,17 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 	// we need to add each item to the database
 	for _, item := range items {
 		// does this bank have a record for the item
-		existingItem, err := b.Database.GuildBank.Query().
+		existingItems, err := b.Database.GuildBank.Query().
 			Where(guildbank.ID(guildBank.ID)).
 			QueryItems().
 			Where(bankitem.ItemID(item)).
-			First(ctx)
+			All(ctx)
 		if err != nil {
 			return err
 		}
 
 		// if we haven't seen the item before
-		if existingItem == nil {
+		if len(existingItems) == 0 {
 			// add the item to the guild bank
 			err = b.Database.GuildBank.Update().
 				Where(guildbank.ID(guildBank.ID)).
@@ -131,7 +131,7 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 
 		// we are adding an item to an existing record in the bank
 		err = b.Database.BankItem.Update().
-			Where(bankitem.ID(existingItem.ID)).
+			Where(bankitem.ID(existingItems[0].ID)).
 			AddQuantity(1).
 			Exec(ctx)
 		if err != nil {
@@ -157,9 +157,8 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	}
 
 	// execute the template
-	t := template.Must(template.New("email.tmpl").Parse(BankDisplayContents))
-	contents := ""
-	err = t.Execute(os.Stdout, &bankDisplayData{
+	var contents bytes.Buffer
+	err = displayTemplate.Execute(&contents, &bankDisplayData{
 		Items: items,
 	})
 	if err != nil {
@@ -167,7 +166,7 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	}
 
 	// update the display message with the items
-	_, err = b.Discord.ChannelMessageEdit(ctx.ChannelID, bank.DisplayMessageID, contents)
+	_, err = b.Discord.ChannelMessageEdit(ctx.ChannelID, bank.DisplayMessageID, contents.String())
 	if err != nil {
 		return err
 	}
@@ -187,6 +186,8 @@ type bankDisplayData struct {
 	Items []*db.BankItem
 }
 
+var displayTemplate *template.Template
+
 // BankDisplayContents is the template used by jeeves to show what's in the bank
 const BankDisplayContents = `
 	Bank Contents:
@@ -195,3 +196,7 @@ const BankDisplayContents = `
 	{{ .Quantity}}x {{ .ItemID }}
     {{- end -}}
 `
+
+func init() {
+	displayTemplate = template.Must(template.New("bank-display").Parse(BankDisplayContents))
+}
