@@ -6,3 +6,7 @@ task "generate" {
 task "build" {
     command = "go build ."
 }
+
+task "tests" {
+    command = "go test ./..."
+}

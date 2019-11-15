@@ -7,6 +7,8 @@ import (
 	"bytes"
 	"html/template"
 	"strings"
+	"strconv"
+	"fmt"
 
 	"github.com/AlecAivazis/jeeves/db"
 	"github.com/AlecAivazis/jeeves/db/bankitem"
@@ -28,6 +30,11 @@ const (
 	// RoleBanker defines the public name of the role to give non-admin users permissions to modify the bank
 	RoleBanker = "Banker"
 )
+
+type Transaction struct {
+	Item   string
+	Amount int
+}
 
 // InitializeBankChannel is called when the user intends to assign a channel for use to display the bank
 func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
@@ -145,9 +152,16 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, itemNames []string) error 
 	}
 
 	// we need to add each item to the database
-	for _, itemName := range items {
-		// get the name ready and normalized
-		item := strings.ToLower(strings.Trim(itemName, " "))
+	for _, item := range items {
+		// get the transaction record
+		transaction, err := ParseTransaction(item)
+		if err != nil {
+			return err
+		}
+
+		// pull out the constants of the transaction
+		item := transaction.Item
+		amount := transaction.Amount
 
 		// does this bank have a record for the item
 		existingItems, err := b.Database.GuildBank.Query().
@@ -164,7 +178,7 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, itemNames []string) error 
 			// create a bank item entry
 			_, err := b.Database.BankItem.Create().
 				SetItemID(item).
-				SetQuantity(1).
+				SetQuantity(amount).
 				SetBank(guildBank).
 				Save(ctx)
 			if err != nil {
@@ -178,7 +192,7 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, itemNames []string) error 
 		// we are adding an item to an existing record in the bank
 		err = b.Database.BankItem.Update().
 			Where(bankitem.ID(existingItems[0].ID)).
-			AddQuantity(1).
+			AddQuantity(amount).
 			Exec(ctx)
 		if err != nil {
 			return err
@@ -251,16 +265,58 @@ func init() {
 	}).Parse(BankDisplayContents))
 }
 
-func properTitle(input string) string {
-	words := strings.Fields(input)
-	smallwords := " a an on the of to "
+const numbers = "1234567890"
 
-	for index, word := range words {
-		if strings.Contains(smallwords, " "+word+" ") {
-			words[index] = word
+func ParseTransaction(entry string) (Transaction, error) {
+	// get the name ready and normalized
+	item := strings.ToLower(strings.Trim(entry, " "))
+
+	// the transaction to return
+	transaction := Transaction{
+		Item: item,
+		Amount: 1,
+	}
+
+	// if the first letter does not parse to an int, there is no quantity 
+	if !strings.Contains(numbers, string(item[0])) {
+		// we're done
+		return transaction, nil
+	}
+
+	// parse the transaction information out of the body
+	amount := ""
+	itemName := ""
+
+	for i, char := range item {
+		// if the character is a number
+		if strings.Contains(numbers, string(char)) {
+			amount += string(char)
+
+		// we ran into the quantity delimiter
+		} else if char == 'x' {
+			// the rest of the entry is the item name
+			itemName = strings.Trim(item[i+1:], " ")
+
+			// we're done here
+			break
+
+		// an unexpected character
 		} else {
-			words[index] = strings.Title(word)
+			return transaction, fmt.Errorf("Unexpected character '%v' in transaction %s", char, item)
 		}
 	}
-	return strings.Join(words, " ")
+
+	// try to parse the quantity as a number
+	quantity, _ := strconv.Atoi(amount)
+	transaction.Amount = quantity
+
+	// convert the item name into the normalized ID
+	itemID, err := ItemNumber(itemName)
+	if err != nil {
+		return transaction, err
+	}
+	transaction.Item = itemID
+
+	// we're done
+	return transaction, nil
 }
