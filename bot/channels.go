@@ -40,9 +40,7 @@ func (b *JeevesBot) RegisterChannelRole(ctx *CommandContext, role string) error 
 	}
 
 	// look up the database entry associated with this guild
-	guildRecord, err := b.Database.Guild.Query().
-		Where(guild.DiscordID(ctx.GuildID)).
-		Only(context.Background())
+	guildRecord, err := b.GuildFromContext(ctx)
 	if err != nil {
 		return err
 	}
