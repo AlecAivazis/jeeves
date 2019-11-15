@@ -6,6 +6,7 @@ package bot
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 
 	"github.com/AlecAivazis/jeeves/db"
@@ -113,6 +114,7 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 
 		// if we haven't seen the item before
 		if len(existingItems) == 0 {
+			fmt.Println("Havent seen this one yet!")
 			// add the item to the guild bank
 			err = b.Database.GuildBank.Update().
 				Where(guildbank.ID(guildBank.ID)).
@@ -128,6 +130,8 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 			// we're done processing this item
 			continue
 		}
+
+		fmt.Println("pshhh whatever that's old news")
 
 		// we are adding an item to an existing record in the bank
 		err = b.Database.BankItem.Update().
