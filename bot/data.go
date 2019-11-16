@@ -8,6 +8,7 @@ package bot
 // script to create the file:  					echo 'select distinct name, entry from item_template group by name' | mysql -h 0.0.0.0 -u root -p wow > data.tsv
 // rename data.tsv to data.go
 // find all and replace in data.go:				(.*)\t(.*) -> "$1": "$2",
+// clean up file to look correct and format:	gofmt -w .
 
 var itemNumbers = map[string]string{
 	"\"Mage-Eye\" Blunderbuss":              "3041",
