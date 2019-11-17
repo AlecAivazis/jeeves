@@ -12,6 +12,7 @@ type CommandContext struct {
 	context.Context
 	GuildID   string
 	ChannelID string
+	Message   *discordgo.Message
 }
 
 // CommandHandler handles the parsing and dispatching of commands for Jeeves
@@ -30,6 +31,7 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 		GuildID:   message.GuildID,
 		ChannelID: message.ChannelID,
 		Context:   context.Background(),
+		Message:   message.Message,
 	}
 
 	var err error

@@ -135,6 +135,12 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 		}
 	}
 
+	// confirm the action with a reaction
+	err = b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👍")
+	if err != nil {
+		return err
+	}
+
 	// nothing went wrong
 	return nil
 }
@@ -281,22 +287,6 @@ func ParseTransaction(entry string) (Transaction, error) {
 
 	// the transaction to return
 	transaction := Transaction{}
-
-	// if the first letter does not parse to an int, there is no quantity
-	if !strings.Contains(numbers, string(item[0])) {
-		// the whole string is the item
-		itemID, err := ItemID(item)
-		if err != nil {
-			return transaction, err
-		}
-
-		// we are a transaction of one
-		transaction.Item = itemID
-		transaction.Amount = 1
-
-		// we're done
-		return transaction, nil
-	}
 
 	// parse the transaction information out of the body
 	amount := ""
