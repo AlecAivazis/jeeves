@@ -56,4 +56,10 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 		b.ReportError(message.ChannelID, err)
 		return
 	}
+
+	// confirm the action with a reaction
+	err = b.Discord.MessageReactionAdd(message.ChannelID, message.ID, "👍")
+	if err != nil {
+		b.ReportError(message.ChannelID, err)
+	}
 }

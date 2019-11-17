@@ -135,12 +135,6 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 		}
 	}
 
-	// confirm the action with a reaction
-	err = b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👍")
-	if err != nil {
-		return err
-	}
-
 	// nothing went wrong
 	return nil
 }
@@ -291,22 +285,24 @@ func ParseTransaction(entry string) (Transaction, error) {
 	// parse the transaction information out of the body
 	amount := ""
 	itemName := ""
-	fmt.Println(item)
+
 	for i, char := range item {
 		// if the character is a number
 		if strings.Contains(numbers, string(char)) {
 			amount += string(char)
 
 			// we ran into the quantity delimiter
-		} else if char == QuantityDelimiter {
+		} else if char == QuantityDelimiter && amount != "" {
 			// the rest of the entry is the item name
 			itemName = strings.Trim(item[i+1:], " ")
 			// we're done here
 			break
 
-			// an unexpected character
+			// consider the entire string the item
 		} else {
-			return transaction, fmt.Errorf("there was an unexpected character '%v' in transaction %s", char, item)
+			itemName = item
+			// we're done
+			break
 		}
 	}
 
