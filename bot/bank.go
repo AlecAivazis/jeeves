@@ -291,7 +291,7 @@ func ParseTransaction(entry string) (Transaction, error) {
 	// parse the transaction information out of the body
 	amount := ""
 	itemName := ""
-
+	fmt.Println(item)
 	for i, char := range item {
 		// if the character is a number
 		if strings.Contains(numbers, string(char)) {
