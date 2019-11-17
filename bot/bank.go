@@ -280,7 +280,9 @@ func ParseTransaction(entry string) (Transaction, error) {
 	item := strings.ToLower(strings.Trim(entry, " "))
 
 	// the transaction to return
-	transaction := Transaction{}
+	transaction := Transaction{
+		Amount: 1,
+	}
 
 	// parse the transaction information out of the body
 	amount := ""
@@ -306,9 +308,12 @@ func ParseTransaction(entry string) (Transaction, error) {
 		}
 	}
 
-	// try to parse the quantity as a number
-	quantity, _ := strconv.Atoi(amount)
-	transaction.Amount = quantity
+	// if we extracted an amount
+	if amount != "" {
+		// try to parse the quantity as a number
+		quantity, _ := strconv.Atoi(amount)
+		transaction.Amount = quantity
+	}
 
 	// convert the item name into the normalized ID
 	itemID, err := ItemID(itemName)
