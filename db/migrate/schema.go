@@ -3,6 +3,8 @@
 package migrate
 
 import (
+	"github.com/AlecAivazis/jeeves/db/guildbank"
+
 	"github.com/facebookincubator/ent/dialect/sql/schema"
 	"github.com/facebookincubator/ent/schema/field"
 )
@@ -47,7 +49,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "channel_id", Type: field.TypeString},
 		{Name: "display_message_id", Type: field.TypeString, Unique: true},
-		{Name: "balance", Type: field.TypeInt},
+		{Name: "balance", Type: field.TypeInt, Default: guildbank.DefaultBalance},
 		{Name: "guild_id", Type: field.TypeInt, Unique: true, Nullable: true},
 	}
 	// GuildBanksTable holds the schema information for the "guild_banks" table.

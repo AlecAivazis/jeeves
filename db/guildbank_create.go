@@ -40,6 +40,14 @@ func (gbc *GuildBankCreate) SetBalance(i int) *GuildBankCreate {
 	return gbc
 }
 
+// SetNillableBalance sets the balance field if the given value is not nil.
+func (gbc *GuildBankCreate) SetNillableBalance(i *int) *GuildBankCreate {
+	if i != nil {
+		gbc.SetBalance(*i)
+	}
+	return gbc
+}
+
 // AddItemIDs adds the items edge to BankItem by ids.
 func (gbc *GuildBankCreate) AddItemIDs(ids ...int) *GuildBankCreate {
 	if gbc.items == nil {
@@ -91,7 +99,8 @@ func (gbc *GuildBankCreate) Save(ctx context.Context) (*GuildBank, error) {
 		return nil, errors.New("db: missing required field \"displayMessageID\"")
 	}
 	if gbc.balance == nil {
-		return nil, errors.New("db: missing required field \"balance\"")
+		v := guildbank.DefaultBalance
+		gbc.balance = &v
 	}
 	if len(gbc.guild) > 1 {
 		return nil, errors.New("db: multiple assignments on a unique edge \"guild\"")

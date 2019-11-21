@@ -2,6 +2,10 @@
 
 package guildbank
 
+import (
+	"github.com/AlecAivazis/jeeves/db/schema"
+)
+
 const (
 	// Label holds the string label denoting the guildbank type in the database.
 	Label = "guild_bank"
@@ -39,3 +43,12 @@ var Columns = []string{
 	FieldDisplayMessageID,
 	FieldBalance,
 }
+
+var (
+	fields = schema.GuildBank{}.Fields()
+
+	// descBalance is the schema descriptor for balance field.
+	descBalance = fields[2].Descriptor()
+	// DefaultBalance holds the default value on creation for the balance field.
+	DefaultBalance = descBalance.Default.(int)
+)

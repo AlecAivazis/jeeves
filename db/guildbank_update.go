@@ -53,6 +53,14 @@ func (gbu *GuildBankUpdate) SetBalance(i int) *GuildBankUpdate {
 	return gbu
 }
 
+// SetNillableBalance sets the balance field if the given value is not nil.
+func (gbu *GuildBankUpdate) SetNillableBalance(i *int) *GuildBankUpdate {
+	if i != nil {
+		gbu.SetBalance(*i)
+	}
+	return gbu
+}
+
 // AddBalance adds i to balance.
 func (gbu *GuildBankUpdate) AddBalance(i int) *GuildBankUpdate {
 	if gbu.addbalance == nil {
@@ -313,6 +321,14 @@ func (gbuo *GuildBankUpdateOne) SetDisplayMessageID(s string) *GuildBankUpdateOn
 func (gbuo *GuildBankUpdateOne) SetBalance(i int) *GuildBankUpdateOne {
 	gbuo.balance = &i
 	gbuo.addbalance = nil
+	return gbuo
+}
+
+// SetNillableBalance sets the balance field if the given value is not nil.
+func (gbuo *GuildBankUpdateOne) SetNillableBalance(i *int) *GuildBankUpdateOne {
+	if i != nil {
+		gbuo.SetBalance(*i)
+	}
 	return gbuo
 }
 
