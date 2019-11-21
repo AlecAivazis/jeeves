@@ -13,6 +13,9 @@ RUN go mod download
 # copy the rest of the files over
 COPY . .
 
+# generate the files because I can never remember to
+RUN go generate ./...
+
 # build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /jeeves
 
