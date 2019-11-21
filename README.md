@@ -11,6 +11,8 @@ and a clunky website. To help with this, he provides a number of different servi
 for your guild including:
 
 - Guild Bank
+- Calendar and Event Scheduling (coming soon)
+- Profession/Recipe look up (coming soon)
 
 ## Guild Bank
 
