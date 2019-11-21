@@ -162,7 +162,7 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 		// if we are depositing gold
 		if item == ItemIDGold {
 			// if the guild does not have enough balance
-			if amount < guildBank.Balance {
+			if guildBank.Balance < amount {
 				return errors.New("we don't have that much money in the bank")
 			}
 
