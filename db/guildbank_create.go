@@ -17,6 +17,7 @@ type GuildBankCreate struct {
 	config
 	channelID        *string
 	displayMessageID *string
+	balance          *int
 	items            map[int]struct{}
 	guild            map[int]struct{}
 }
@@ -30,6 +31,12 @@ func (gbc *GuildBankCreate) SetChannelID(s string) *GuildBankCreate {
 // SetDisplayMessageID sets the displayMessageID field.
 func (gbc *GuildBankCreate) SetDisplayMessageID(s string) *GuildBankCreate {
 	gbc.displayMessageID = &s
+	return gbc
+}
+
+// SetBalance sets the balance field.
+func (gbc *GuildBankCreate) SetBalance(i int) *GuildBankCreate {
+	gbc.balance = &i
 	return gbc
 }
 
@@ -83,6 +90,9 @@ func (gbc *GuildBankCreate) Save(ctx context.Context) (*GuildBank, error) {
 	if gbc.displayMessageID == nil {
 		return nil, errors.New("db: missing required field \"displayMessageID\"")
 	}
+	if gbc.balance == nil {
+		return nil, errors.New("db: missing required field \"balance\"")
+	}
 	if len(gbc.guild) > 1 {
 		return nil, errors.New("db: multiple assignments on a unique edge \"guild\"")
 	}
@@ -116,6 +126,10 @@ func (gbc *GuildBankCreate) sqlSave(ctx context.Context) (*GuildBank, error) {
 	if value := gbc.displayMessageID; value != nil {
 		insert.Set(guildbank.FieldDisplayMessageID, *value)
 		gb.DisplayMessageID = *value
+	}
+	if value := gbc.balance; value != nil {
+		insert.Set(guildbank.FieldBalance, *value)
+		gb.Balance = *value
 	}
 	id, err := insertLastID(ctx, tx, insert.Returning(guildbank.FieldID))
 	if err != nil {

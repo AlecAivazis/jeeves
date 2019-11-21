@@ -19,6 +19,8 @@ type GuildBankUpdate struct {
 	config
 	channelID        *string
 	displayMessageID *string
+	balance          *int
+	addbalance       *int
 	items            map[int]struct{}
 	guild            map[int]struct{}
 	removedItems     map[int]struct{}
@@ -41,6 +43,23 @@ func (gbu *GuildBankUpdate) SetChannelID(s string) *GuildBankUpdate {
 // SetDisplayMessageID sets the displayMessageID field.
 func (gbu *GuildBankUpdate) SetDisplayMessageID(s string) *GuildBankUpdate {
 	gbu.displayMessageID = &s
+	return gbu
+}
+
+// SetBalance sets the balance field.
+func (gbu *GuildBankUpdate) SetBalance(i int) *GuildBankUpdate {
+	gbu.balance = &i
+	gbu.addbalance = nil
+	return gbu
+}
+
+// AddBalance adds i to balance.
+func (gbu *GuildBankUpdate) AddBalance(i int) *GuildBankUpdate {
+	if gbu.addbalance == nil {
+		gbu.addbalance = &i
+	} else {
+		*gbu.addbalance += i
+	}
 	return gbu
 }
 
@@ -182,6 +201,12 @@ func (gbu *GuildBankUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value := gbu.displayMessageID; value != nil {
 		updater.Set(guildbank.FieldDisplayMessageID, *value)
 	}
+	if value := gbu.balance; value != nil {
+		updater.Set(guildbank.FieldBalance, *value)
+	}
+	if value := gbu.addbalance; value != nil {
+		updater.Add(guildbank.FieldBalance, *value)
+	}
 	if !updater.Empty() {
 		query, args := updater.Query()
 		if err := tx.Exec(ctx, query, args, &res); err != nil {
@@ -264,6 +289,8 @@ type GuildBankUpdateOne struct {
 	id               int
 	channelID        *string
 	displayMessageID *string
+	balance          *int
+	addbalance       *int
 	items            map[int]struct{}
 	guild            map[int]struct{}
 	removedItems     map[int]struct{}
@@ -279,6 +306,23 @@ func (gbuo *GuildBankUpdateOne) SetChannelID(s string) *GuildBankUpdateOne {
 // SetDisplayMessageID sets the displayMessageID field.
 func (gbuo *GuildBankUpdateOne) SetDisplayMessageID(s string) *GuildBankUpdateOne {
 	gbuo.displayMessageID = &s
+	return gbuo
+}
+
+// SetBalance sets the balance field.
+func (gbuo *GuildBankUpdateOne) SetBalance(i int) *GuildBankUpdateOne {
+	gbuo.balance = &i
+	gbuo.addbalance = nil
+	return gbuo
+}
+
+// AddBalance adds i to balance.
+func (gbuo *GuildBankUpdateOne) AddBalance(i int) *GuildBankUpdateOne {
+	if gbuo.addbalance == nil {
+		gbuo.addbalance = &i
+	} else {
+		*gbuo.addbalance += i
+	}
 	return gbuo
 }
 
@@ -424,6 +468,14 @@ func (gbuo *GuildBankUpdateOne) sqlSave(ctx context.Context) (gb *GuildBank, err
 	if value := gbuo.displayMessageID; value != nil {
 		updater.Set(guildbank.FieldDisplayMessageID, *value)
 		gb.DisplayMessageID = *value
+	}
+	if value := gbuo.balance; value != nil {
+		updater.Set(guildbank.FieldBalance, *value)
+		gb.Balance = *value
+	}
+	if value := gbuo.addbalance; value != nil {
+		updater.Add(guildbank.FieldBalance, *value)
+		gb.Balance += *value
 	}
 	if !updater.Empty() {
 		query, args := updater.Query()

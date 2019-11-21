@@ -159,6 +159,20 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 		item := transaction.Item
 		amount := transaction.Amount
 
+		// if we are depositing gold
+		if item == ItemIDGold {
+			// if the guild does not have enough balance
+			if amount < guildBank.Balance {
+				return errors.New("we don't have that much money in the bank")
+			}
+
+			// decrement the guild bance
+			guildBank.Update().AddBalance(-amount).Exec(ctx)
+
+			// we're done processing it
+			continue
+		}
+
 		// does this bank have a record for the item
 		existingItems, err := guildBank.
 			QueryItems().
@@ -222,6 +236,15 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 
 		fmt.Println("Depositing", amount, "of", item)
 
+		// if we are depositing gold
+		if item == ItemIDGold {
+			// add the deposit to the guild bank
+			guildBank.Update().AddBalance(amount)
+
+			// we're done processing it
+			continue
+		}
+
 		// does this bank have a record for the item
 		existingItems, err := guildBank.
 			QueryItems().
@@ -269,7 +292,8 @@ func (b *JeevesBot) GuildBank(ctx *CommandContext) (*db.GuildBank, error) {
 }
 
 type bankDisplayData struct {
-	Items []*db.BankItem
+	Items   []*db.BankItem
+	Balance int
 }
 
 const numbers = "1234567890"
@@ -361,7 +385,8 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	// execute the template
 	var contents bytes.Buffer
 	err = displayTemplate.Execute(&contents, &bankDisplayData{
-		Items: items,
+		Items:   items,
+		Balance: bank.Balance,
 	})
 	if err != nil {
 		return err
@@ -380,6 +405,7 @@ var displayTemplate *template.Template
 
 // BankDisplayContents is the template used by jeeves to show what's in the bank
 const BankDisplayContents = `
+Balance: {{ .Balance }}
 Bank Contents:
 {{- range .Items }}
 {{ .Quantity}}x {{ itemName .ItemID }}

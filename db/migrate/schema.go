@@ -47,6 +47,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "channel_id", Type: field.TypeString},
 		{Name: "display_message_id", Type: field.TypeString, Unique: true},
+		{Name: "balance", Type: field.TypeInt},
 		{Name: "guild_id", Type: field.TypeInt, Unique: true, Nullable: true},
 	}
 	// GuildBanksTable holds the schema information for the "guild_banks" table.
@@ -57,7 +58,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:  "guild_banks_guilds_bank",
-				Columns: []*schema.Column{GuildBanksColumns[3]},
+				Columns: []*schema.Column{GuildBanksColumns[4]},
 
 				RefColumns: []*schema.Column{GuildsColumns[0]},
 				OnDelete:   schema.SetNull,

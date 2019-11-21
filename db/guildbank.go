@@ -18,6 +18,8 @@ type GuildBank struct {
 	ChannelID string `json:"channelID,omitempty"`
 	// DisplayMessageID holds the value of the "displayMessageID" field.
 	DisplayMessageID string `json:"displayMessageID,omitempty"`
+	// Balance holds the value of the "balance" field.
+	Balance int `json:"balance,omitempty"`
 }
 
 // FromRows scans the sql response data into GuildBank.
@@ -26,18 +28,21 @@ func (gb *GuildBank) FromRows(rows *sql.Rows) error {
 		ID               int
 		ChannelID        sql.NullString
 		DisplayMessageID sql.NullString
+		Balance          sql.NullInt64
 	}
 	// the order here should be the same as in the `guildbank.Columns`.
 	if err := rows.Scan(
 		&vgb.ID,
 		&vgb.ChannelID,
 		&vgb.DisplayMessageID,
+		&vgb.Balance,
 	); err != nil {
 		return err
 	}
 	gb.ID = vgb.ID
 	gb.ChannelID = vgb.ChannelID.String
 	gb.DisplayMessageID = vgb.DisplayMessageID.String
+	gb.Balance = int(vgb.Balance.Int64)
 	return nil
 }
 
@@ -78,6 +83,8 @@ func (gb *GuildBank) String() string {
 	builder.WriteString(gb.ChannelID)
 	builder.WriteString(", displayMessageID=")
 	builder.WriteString(gb.DisplayMessageID)
+	builder.WriteString(", balance=")
+	builder.WriteString(fmt.Sprintf("%v", gb.Balance))
 	builder.WriteByte(')')
 	return builder.String()
 }

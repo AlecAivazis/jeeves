@@ -11,6 +11,8 @@ const (
 	FieldChannelID = "channel_id"
 	// FieldDisplayMessageID holds the string denoting the displaymessageid vertex property in the database.
 	FieldDisplayMessageID = "display_message_id"
+	// FieldBalance holds the string denoting the balance vertex property in the database.
+	FieldBalance = "balance"
 
 	// Table holds the table name of the guildbank in the database.
 	Table = "guild_banks"
@@ -35,4 +37,5 @@ var Columns = []string{
 	FieldID,
 	FieldChannelID,
 	FieldDisplayMessageID,
+	FieldBalance,
 }

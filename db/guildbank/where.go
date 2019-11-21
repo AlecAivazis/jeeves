@@ -126,6 +126,15 @@ func DisplayMessageID(v string) predicate.GuildBank {
 	)
 }
 
+// Balance applies equality check predicate on the "balance" field. It's identical to BalanceEQ.
+func Balance(v int) predicate.GuildBank {
+	return predicate.GuildBank(
+		func(s *sql.Selector) {
+			s.Where(sql.EQ(s.C(FieldBalance), v))
+		},
+	)
+}
+
 // ChannelIDEQ applies the EQ predicate on the "channelID" field.
 func ChannelIDEQ(v string) predicate.GuildBank {
 	return predicate.GuildBank(
@@ -396,6 +405,98 @@ func DisplayMessageIDContainsFold(v string) predicate.GuildBank {
 	return predicate.GuildBank(
 		func(s *sql.Selector) {
 			s.Where(sql.ContainsFold(s.C(FieldDisplayMessageID), v))
+		},
+	)
+}
+
+// BalanceEQ applies the EQ predicate on the "balance" field.
+func BalanceEQ(v int) predicate.GuildBank {
+	return predicate.GuildBank(
+		func(s *sql.Selector) {
+			s.Where(sql.EQ(s.C(FieldBalance), v))
+		},
+	)
+}
+
+// BalanceNEQ applies the NEQ predicate on the "balance" field.
+func BalanceNEQ(v int) predicate.GuildBank {
+	return predicate.GuildBank(
+		func(s *sql.Selector) {
+			s.Where(sql.NEQ(s.C(FieldBalance), v))
+		},
+	)
+}
+
+// BalanceIn applies the In predicate on the "balance" field.
+func BalanceIn(vs ...int) predicate.GuildBank {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.GuildBank(
+		func(s *sql.Selector) {
+			// if not arguments were provided, append the FALSE constants,
+			// since we can't apply "IN ()". This will make this predicate falsy.
+			if len(vs) == 0 {
+				s.Where(sql.False())
+				return
+			}
+			s.Where(sql.In(s.C(FieldBalance), v...))
+		},
+	)
+}
+
+// BalanceNotIn applies the NotIn predicate on the "balance" field.
+func BalanceNotIn(vs ...int) predicate.GuildBank {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.GuildBank(
+		func(s *sql.Selector) {
+			// if not arguments were provided, append the FALSE constants,
+			// since we can't apply "IN ()". This will make this predicate falsy.
+			if len(vs) == 0 {
+				s.Where(sql.False())
+				return
+			}
+			s.Where(sql.NotIn(s.C(FieldBalance), v...))
+		},
+	)
+}
+
+// BalanceGT applies the GT predicate on the "balance" field.
+func BalanceGT(v int) predicate.GuildBank {
+	return predicate.GuildBank(
+		func(s *sql.Selector) {
+			s.Where(sql.GT(s.C(FieldBalance), v))
+		},
+	)
+}
+
+// BalanceGTE applies the GTE predicate on the "balance" field.
+func BalanceGTE(v int) predicate.GuildBank {
+	return predicate.GuildBank(
+		func(s *sql.Selector) {
+			s.Where(sql.GTE(s.C(FieldBalance), v))
+		},
+	)
+}
+
+// BalanceLT applies the LT predicate on the "balance" field.
+func BalanceLT(v int) predicate.GuildBank {
+	return predicate.GuildBank(
+		func(s *sql.Selector) {
+			s.Where(sql.LT(s.C(FieldBalance), v))
+		},
+	)
+}
+
+// BalanceLTE applies the LTE predicate on the "balance" field.
+func BalanceLTE(v int) predicate.GuildBank {
+	return predicate.GuildBank(
+		func(s *sql.Selector) {
+			s.Where(sql.LTE(s.C(FieldBalance), v))
 		},
 	)
 }

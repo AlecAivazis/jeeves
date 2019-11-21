@@ -4,13 +4,20 @@ import (
 	"errors"
 )
 
+// ItemIDGold is the item id that we use to internall represent a gold deposit/withdrawl
+var ItemIDGold = "gold"
+
 var itemNames = map[string]string{}
 
 // ItemID returns the WoW item ID for the item with the given name
 func ItemID(name string) (string, error) {
-	// do we have an entry for that item
+	// if we are looking up gold (not an item) we have to return a special ID
+	if name == "gold" {
+		return ItemIDGold, nil
+	}
+
+	// if we have an entry for that item, use it
 	if item, ok := itemNumbers[properTitle(name)]; ok {
-		// stringify the int value
 		return item, nil
 	}
 

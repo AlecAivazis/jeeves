@@ -56,6 +56,7 @@ func ExampleGuild() {
 		Create().
 		SetChannelID("string").
 		SetDisplayMessageID("string").
+		SetBalance(1).
 		SaveX(ctx)
 	log.Println("guildbank created:", gb0)
 
@@ -100,6 +101,7 @@ func ExampleGuildBank() {
 		Create().
 		SetChannelID("string").
 		SetDisplayMessageID("string").
+		SetBalance(1).
 		AddItems(bi0).
 		SaveX(ctx)
 	log.Println("guildbank created:", gb)
