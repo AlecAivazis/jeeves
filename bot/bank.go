@@ -239,7 +239,7 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 		// if we are depositing gold
 		if item == ItemIDGold {
 			// add the deposit to the guild bank
-			guildBank.Update().AddBalance(amount)
+			guildBank.Update().AddBalance(amount).Exec(ctx)
 
 			// we're done processing it
 			continue
