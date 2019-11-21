@@ -16,7 +16,7 @@ func (GuildBank) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("channelID"),
 		field.String("displayMessageID").Unique(),
-		field.Int("balance"),
+		field.Int("balance").Default(0),
 	}
 }
 
