@@ -474,7 +474,7 @@ func init() {
 			copper -= silver * 100
 
 			// return the for
-			return fmt.Sprintf("%vg %vs %vc")
+			return fmt.Sprintf("%vg %vs %vc", gold, silver, copper)
 		},
 	}).Parse(BankDisplayContents))
 }
