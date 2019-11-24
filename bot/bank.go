@@ -439,7 +439,7 @@ var displayTemplate *template.Template
 
 // BankDisplayContents is the template used by jeeves to show what's in the bank
 const BankDisplayContents = `
-Current Gold Balance: {{ format .Balance }}
+Current Balance: {{ format .Balance }}
 
 Bank Contents:
 {{- range .Items }}
