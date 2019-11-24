@@ -11,9 +11,9 @@ var itemNames = map[string]string{}
 
 // ItemID returns the WoW item ID for the item with the given name
 func ItemID(name string) (string, error) {
-	// if we are looking up gold (not an item) we have to return a special ID
-	if name == "gold" {
-		return ItemIDGold, nil
+	// the id of gold is the special string
+	if name == ItemIDGold {
+		return name, nil
 	}
 
 	// if we have an entry for that item, use it

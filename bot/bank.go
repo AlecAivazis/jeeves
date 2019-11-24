@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -36,6 +37,12 @@ const (
 const (
 	// QuantityDelimiter is the character that separates the amount from the item. Ie, "x" in 2xLava Core
 	QuantityDelimiter = 'x'
+	// CopperDelimiter is the character that designates a copper deposit
+	CopperDelimiter = "c"
+	// SilverDelimiter is the character that designates a silver deposit
+	SilverDelimiter = "s"
+	// GoldDelimiter is the character that designates a Gold deposit
+	GoldDelimiter = "g"
 )
 
 type Transaction struct {
@@ -308,43 +315,70 @@ func ParseTransaction(entry string) (Transaction, error) {
 		Amount: 1,
 	}
 
-	// parse the transaction information out of the body
+	// we are going to consume until we find something that's not a number
 	amount := ""
-	itemName := ""
 
-	for i, char := range item {
-		// if the character is a number
-		if strings.Contains(numbers, string(char)) {
-			amount += string(char)
+	// if the first character is a number we want to keep looking down the string
+	// and group up all of the numbers to form a single quantity
+	if strings.Contains(numbers, string(item[0])) {
 
-			// we ran into the quantity delimiter
-		} else if char == QuantityDelimiter && amount != "" {
-			// the rest of the entry is the item name
-			itemName = strings.Trim(item[i+1:], " ")
-			// we're done here
-			break
+		// look at all of the characters in the word
+		for i, char := range item {
+			// if the character is a number
+			if strings.Contains(numbers, string(item[i])) {
+				// add it to the running total
+				amount += string(char)
 
-			// consider the entire string the item
-		} else {
-			itemName = item
-			// we're done
-			break
+				// we found something that's not a number
+			} else {
+				// try to parse the quantity as a number
+				quantity, _ := strconv.Atoi(amount)
+				transaction.Amount = quantity
+
+				// we want to "eat up" what we've treated as the number
+				item = item[i:]
+
+				// stop consuming text
+				break
+			}
 		}
 	}
 
-	// if we extracted an amount
-	if amount != "" {
-		// try to parse the quantity as a number
-		quantity, _ := strconv.Atoi(amount)
-		transaction.Amount = quantity
-	}
+	// remove any spaces around the item
+	item = strings.Trim(item, " ")
 
-	// convert the item name into the normalized ID
-	itemID, err := ItemID(itemName)
-	if err != nil {
-		return transaction, err
+	// if the user is depositing gold
+	if item == GoldDelimiter {
+		transaction.Item = ItemIDGold
+		transaction.Amount *= 10000 // 1 gold = 100 silver = 10000 copper
+
+		// the user is depositing silver
+	} else if item == SilverDelimiter {
+		transaction.Item = ItemIDGold
+		transaction.Amount *= 100 // 1 gold = 100 silver
+
+		// the user is depositing copper
+	} else if item == CopperDelimiter {
+		transaction.Item = ItemIDGold
+
+		// if we started the message with a number and the next character
+		// is the quantity delimiter then we are depositing some number of an item
+	} else if amount != "" && item[0] == QuantityDelimiter {
+		// convert the item name into the normalized ID
+		itemID, err := ItemID(strings.Trim(item[1:], " "))
+		if err != nil {
+			return transaction, err
+		}
+		transaction.Item = itemID
+	} else {
+		// convert the item name into the normalized ID
+		itemID, err := ItemID(strings.Trim(entry, " "))
+		if err != nil {
+			return transaction, err
+		}
+		transaction.Item = itemID
+
 	}
-	transaction.Item = itemID
 
 	// we're done
 	return transaction, nil
@@ -405,7 +439,7 @@ var displayTemplate *template.Template
 
 // BankDisplayContents is the template used by jeeves to show what's in the bank
 const BankDisplayContents = `
-Current Gold Balance: {{ .Balance }}
+Current Gold Balance: {{ format .Balance }}
 
 Bank Contents:
 {{- range .Items }}
@@ -424,6 +458,23 @@ func init() {
 			// backwards compatability is hard
 			return id
 
+		},
+		"format": func(balance int) string {
+			// the amount of copper will be what's left
+			copper := float64(balance)
+
+			// the amount of gold
+			gold := math.Floor(float64(balance) / 10000)
+			// remove the amount of gold
+			copper -= gold * 10000
+
+			// the amount of silver left
+			silver := math.Floor(float64(copper) / 100)
+			// remove the amount of silver
+			copper -= silver * 100
+
+			// return the for
+			return fmt.Sprintf("%vg %vs %vc")
 		},
 	}).Parse(BankDisplayContents))
 }

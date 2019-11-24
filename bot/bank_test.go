@@ -44,6 +44,27 @@ func TestParseTransaction(t *testing.T) {
 				Item:   lavaCoreID,
 			},
 		},
+		{
+			Entry: "2c",
+			Expected: bot.Transaction{
+				Amount: 2,
+				Item:   bot.ItemIDGold,
+			},
+		},
+		{
+			Entry: "2s",
+			Expected: bot.Transaction{
+				Amount: 200,
+				Item:   bot.ItemIDGold,
+			},
+		},
+		{
+			Entry: "2g",
+			Expected: bot.Transaction{
+				Amount: 20000,
+				Item:   bot.ItemIDGold,
+			},
+		},
 	}
 
 	for _, row := range table {
