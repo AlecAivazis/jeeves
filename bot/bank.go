@@ -154,14 +154,13 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 		return err
 	}
 
-	// we need to add each item to the database
-	for _, item := range items {
-		// get the transaction record
-		transaction, err := ParseTransaction(item)
-		if err != nil {
-			return err
-		}
+	transactions, err := ParseTransactions(items)
+	if err != nil {
+		return err
+	}
 
+	// we need to add each item to the database
+	for _, transaction := range transactions {
 		// pull out the constants of the transaction
 		item := transaction.Item
 		amount := transaction.Amount
@@ -229,14 +228,13 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 		return err
 	}
 
-	// we need to add each item to the database
-	for _, item := range items {
-		// get the transaction record
-		transaction, err := ParseTransaction(item)
-		if err != nil {
-			return err
-		}
+	transactions, err := ParseTransactions(items)
+	if err != nil {
+		return err
+	}
 
+	// we need to add each item to the database
+	for _, transaction := range transactions {
 		// pull out the constants of the transaction
 		item := transaction.Item
 		amount := transaction.Amount
@@ -305,8 +303,24 @@ type bankDisplayData struct {
 
 const numbers = "1234567890"
 
+func ParseTransactions(before []string) ([]Transaction, error) {
+	transactions := []Transaction{}
+
+	for _, entry := range before {
+		txn, err := parseTransaction(entry)
+		if err != nil {
+			return nil, err
+		}
+
+		// add the transaction to the list
+		transactions = append(transactions, txn)
+	}
+
+	return transactions, nil
+}
+
 // ParseTransaction takes a string like "2xLava Core" and extracts the quantity and item referenced
-func ParseTransaction(entry string) (Transaction, error) {
+func parseTransaction(entry string) (Transaction, error) {
 	// get the name ready and normalized
 	item := strings.ToLower(strings.Trim(entry, " "))
 
