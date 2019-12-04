@@ -53,7 +53,7 @@ type Transaction struct {
 // InitializeBankChannel is called when the user intends to assign a channel for use to display the bank
 func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 	// confirm the action with the user
-	_, err := b.Discord.ChannelMessageSend(ctx.ChannelID, "Okay! Please give me a moment to set up your guild bank...")
+	_, err := b.Reply(ctx, "Okay! Please give me a moment to set up your guild bank...")
 	if err != nil {
 		return err
 	}
@@ -73,26 +73,37 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 	// if we have to define the banker role now
 	if !definedBanker {
 		// tell the user about it
-		_, err = b.Discord.ChannelMessageSend(ctx.ChannelID, "I am creating the Banker role. Assign this to non-Admin users you want"+
+		_, err = b.Reply(ctx, "I am creating the Banker role. Assign this to non-Admin users you want"+
 			" to give permission to move items in and out of the bank.")
 		if err != nil {
 			return err
 		}
 
-		// create the role
+		// create the banker role
 		role, err := b.Discord.GuildRoleCreate(ctx.GuildID)
-		if err != nil {
-			return err
+
+		// jeeves might not have the permissions to make roles (that's a high level one) but that's okay!
+
+		// if we succeed
+		if err == nil {
+			// edit the role we just made (not sure why we couldn't do this when we created it to begin with...)
+			_, err = b.Discord.GuildRoleEdit(ctx.GuildID, role.ID, RoleBanker, role.Color, role.Hoist, role.Permissions, role.Mentionable)
+			if err != nil {
+				return err
+			}
+
+			// if there was a problem, we still want to continue
+		} else {
+			// tell them what happened
+			b.Reply(ctx, "Hmmm something happened when I tried to do that. Maybe I don't have permissions to add roles?"+
+				" Before you try again, either make sure I have that permission or you can create the \"Banker\" role and I"+
+				" won't try to make it next time.")
 		}
-		// edit the role we just made (not sure why we couldn't do this when we created it to begin with...)
-		_, err = b.Discord.GuildRoleEdit(ctx.GuildID, role.ID, RoleBanker, role.Color, role.Hoist, role.Permissions, role.Mentionable)
-		if err != nil {
-			return err
-		}
+
 	}
 
 	// send the display message now so they know what they can delete
-	display, err := b.Discord.ChannelMessageSend(ctx.ChannelID, "All set! Your guild bank's contents will go here. You are free to"+
+	display, err := b.Reply(ctx, "All set! Your guild bank's contents will go here. You are free to"+
 		" delete any other message in this channel but please do not delete this message. I will update it as your bankers"+
 		" add items to the bank.")
 	if err != nil {
@@ -148,6 +159,11 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 
 // WithdrawItems is used when the user wants to withdraw the specified items from the bank. Will update the display message.
 func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
+	// make sure the user has the right permissions
+	if err := b.userCanModifyBank(ctx); err != nil {
+		return err
+	}
+
 	// find the bank for this guild
 	guildBank, err := b.GuildBank(ctx)
 	if err != nil {
@@ -222,6 +238,11 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 
 // DepositItems is used when the user wants to deposit the specified items into the bank. Will update the display message.
 func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
+	// make sure the user has the right permissions
+	if err := b.userCanModifyBank(ctx); err != nil {
+		return err
+	}
+
 	// find the bank for this guild
 	guildBank, err := b.GuildBank(ctx)
 	if err != nil {
@@ -238,8 +259,6 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 		// pull out the constants of the transaction
 		item := transaction.Item
 		amount := transaction.Amount
-
-		fmt.Println("Depositing", amount, "of", item)
 
 		// if we are depositing gold
 		if item == ItemIDGold {
@@ -317,6 +336,38 @@ func ParseTransactions(before []string) ([]Transaction, error) {
 	}
 
 	return transactions, nil
+}
+
+// userCanModifyBank returns an error if the user shouldn't be allowed to touch the bank
+func (b *JeevesBot) userCanModifyBank(ctx *CommandContext) error {
+	// look up the roles in the guild so we can compare role IDs
+	roles, err := b.Discord.GuildRoles(ctx.GuildID)
+	if err != nil {
+		return errors.New("I could not look up the roles of this server. Maybe I dont have the right persmissions?")
+	}
+
+	// find the id of the bank role
+	var bankRoleID string
+	for _, role := range roles {
+		if role.Name == RoleBanker {
+			bankRoleID = role.ID
+		}
+	}
+
+	// if we couldn't find the role
+	if bankRoleID == "" {
+		return errors.New("it doesn't look like you have the Banker role defined")
+	}
+
+	// see if the author of th emessage has the bank role
+	for _, roleID := range ctx.Message.Member.Roles {
+		if roleID == bankRoleID {
+			return nil
+		}
+	}
+
+	// the user does not have the right permissions
+	return errors.New("only Bankers can modify the bank")
 }
 
 // ParseTransaction takes a string like "2xLava Core" and extracts the quantity and item referenced

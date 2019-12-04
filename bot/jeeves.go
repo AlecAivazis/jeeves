@@ -96,3 +96,8 @@ func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate)
 		SetDiscordID(event.Guild.ID).
 		Save(context.Background())
 }
+
+// Reply sends a message to the channel in the given context
+func (b *JeevesBot) Reply(ctx *CommandContext, message string) (*discordgo.Message, error) {
+	return b.Discord.ChannelMessageSend(ctx.ChannelID, message)
+}
