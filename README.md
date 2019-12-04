@@ -21,8 +21,8 @@ for your guild including:
 Before Jeeves can track your guild bank's contents, you must tell him where he can display what is
 inside of your bank. To do this, an admin has to say `!jeeves-assign-bank` inside of the desired channel.
 
-Note: Jeeves will also create the `Banker` role if your discord doesn't have it. You can assign this role to users
-that you want to be able to move items in and out of the bank, without elevating them to an `Admin`.
+Note: Jeeves will also create the `Banker` role if your discord doesn't have it. You should assign this role to users
+that you want to be able to move items in and out of the bank.
 
 ### Commands
 
