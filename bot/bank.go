@@ -471,15 +471,21 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 		return err
 	}
 
+	fmt.Println(items)
+
 	// sort the items based on their display name
 	sort.SliceStable(items, func(i, j int) bool {
 		// figure out the display names of the two items
 		nameA, _ := ItemID(items[i].ItemID)
 		nameB, _ := ItemID(items[j].ItemID)
 
+		fmt.Println("comparing " + nameA + " to " + nameB)
+
 		// i should come before j if i's name is less than j
 		return nameA < nameB
 	})
+
+	fmt.Println(items)
 
 	// execute the template
 	var contents bytes.Buffer
