@@ -25,6 +25,17 @@ func ItemID(name string) (string, error) {
 	return "", errors.New("I don't recognize this item: " + name)
 }
 
+// ItemName returns the name of an item given its id
+func ItemName(id string) (string, error) {
+	name, ok := itemNames[id]
+	if !ok {
+		return "", errors.New("could not find the name for an item with id " + id)
+	}
+
+	// return the name
+	return name, nil
+}
+
 func init() {
 	// invert each entry in the map so we can look up names if we have the ID
 	for name := range itemNumbers {
