@@ -27,6 +27,8 @@ const (
 	CommandWithdraw = "withdraw"
 	// CommandAssignBankChannel defines the command used to assign a channel to use to display the bank
 	CommandAssignBankChannel = "jeeves-assign-bank"
+	// CommandRefreshBank can be used to force the bank to be re-rendered
+	CommandRefreshBank = "refresh-bank"
 )
 
 const (
@@ -233,7 +235,6 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 
 	// once we are done adding the items we should update the listing
 	return b.UpdateBankListing(ctx)
-	return nil
 }
 
 // DepositItems is used when the user wants to deposit the specified items into the bank. Will update the display message.

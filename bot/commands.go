@@ -49,6 +49,8 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 		trimmed := strings.Trim(words[1], ", ")
 
 		err = b.WithdrawItems(ctx, strings.Split(trimmed, ","))
+	case CommandRefreshBank:
+		err = b.UpdateBankListing(ctx)
 	}
 	// if the command failed
 	if err != nil {
