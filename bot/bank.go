@@ -29,6 +29,8 @@ const (
 	CommandAssignBankChannel = "jeeves-assign-bank"
 	// CommandRefreshBank can be used to force the bank to be re-rendered
 	CommandRefreshBank = "refresh-bank"
+	// CommandRequest can be used to submit a request to be fulfilled by a banker
+	CommandRequest = "request"
 )
 
 const (
@@ -307,6 +309,10 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 
 	// once we are done adding the items we should update the listing
 	return b.UpdateBankListing(ctx)
+}
+
+func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) error {
+	return nil
 }
 
 // GuildBank returns the build bank object associated with the current context
