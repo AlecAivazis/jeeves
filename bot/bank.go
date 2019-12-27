@@ -312,7 +312,10 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 }
 
 func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) error {
-	return nil
+	// listen for the indication that the banker sent the items
+	return ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(m *Message) {
+		fmt.Println(m.Content)
+	})
 }
 
 // GuildBank returns the build bank object associated with the current context

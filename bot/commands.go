@@ -10,9 +10,10 @@ import (
 // CommandContext holds the contextual information for a message that we receive
 type CommandContext struct {
 	context.Context
+	Bot       *JeevesBot
 	GuildID   string
 	ChannelID string
-	Message   *discordgo.Message
+	Message   *Message
 }
 
 // CommandHandler handles the parsing and dispatching of commands for Jeeves
@@ -28,10 +29,11 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 
 	// construct the context object
 	ctx := &CommandContext{
+		Bot:       b,
 		GuildID:   message.GuildID,
 		ChannelID: message.ChannelID,
 		Context:   context.Background(),
-		Message:   message.Message,
+		Message:   &Message{Message: *message.Message},
 	}
 
 	var err error
