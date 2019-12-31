@@ -164,7 +164,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 // WithdrawItems is used when the user wants to withdraw the specified items from the bank. Will update the display message.
 func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure the user has the right permissions
-	if err := b.userCanModifyBank(ctx); err != nil {
+	if err := b.ValidateWithdraw(ctx, items); err != nil {
 		return false, err
 	}
 
@@ -187,11 +187,6 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, er
 
 		// if we are depositing gold
 		if item == ItemIDGold {
-			// if the guild does not have enough balance
-			if guildBank.Balance < amount {
-				return false, errors.New("we don't have that much money in the bank")
-			}
-
 			// decrement the guild bance
 			guildBank.Update().AddBalance(-amount).Exec(ctx)
 
@@ -206,17 +201,6 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, er
 			All(ctx)
 		if err != nil {
 			return false, err
-		}
-
-		// if we haven't seen the item before
-		if len(existingItems) == 0 {
-			// we can't withdraw it!
-			return false, errors.New("it does not look like we have that item in the bank")
-		}
-
-		// make sure there are enough items in the bank
-		if amount > existingItems[0].Quantity {
-			return false, errors.New("there is not enough of that item in the bank")
 		}
 
 		// if withdrawing this item will take its quantity to zero
@@ -312,10 +296,87 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, err
 }
 
 func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, error) {
+	// make sure we would be able to perform the withdraw (ie, the item names are valid)
+	if err := b.ValidateWithdraw(ctx, items); err != nil {
+		return false, err
+	}
+
 	// listen for the indication that the banker sent the items
-	return false, ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(m *Message) {
-		fmt.Println(m.Content)
+	// that reaction can be any of the following: ☑️, ✔️, or ✅
+	return false, ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(reaction string) {
+		// if the reaction is one of the approved ones
+		if strings.Contains("☑️✔️✅", reaction) {
+			// perform the withdraw
+			_, err := b.WithdrawItems(ctx, items)
+			if err != nil {
+				b.ReportError(ctx.ChannelID, err)
+				return
+			}
+
+			// we don't need to listen for reactions to this message any more
+			ctx.Bot.UnregisterMessageReactionCallback(ctx.Message)
+		}
 	})
+}
+
+func (b *JeevesBot) ValidateWithdraw(ctx *CommandContext, items []string) error {
+	// make sure the user has the right permissions
+	if err := b.userCanModifyBank(ctx); err != nil {
+		return err
+	}
+
+	// find the bank for this guild
+	guildBank, err := b.GuildBank(ctx)
+	if err != nil {
+		return err
+	}
+
+	// parse the transactions into something we can process
+	transactions, err := ParseTransactions(items)
+	if err != nil {
+		return err
+	}
+
+	// we need to add each item to the database
+	for _, transaction := range transactions {
+		// pull out the constants of the transaction
+		item := transaction.Item
+		amount := transaction.Amount
+
+		// if we are depositing gold
+		if item == ItemIDGold {
+			// if the guild does not have enough balance
+			if guildBank.Balance < amount {
+				return errors.New("we don't have that much money in the bank")
+			}
+
+			// we're done processing it
+			continue
+		}
+
+		// does this bank have a record for the item
+		existingItems, err := guildBank.
+			QueryItems().
+			Where(bankitem.ItemID(item)).
+			All(ctx)
+		if err != nil {
+			return err
+		}
+
+		// if we haven't seen the item before
+		if len(existingItems) == 0 {
+			// we can't withdraw it!
+			return errors.New("it does not look like we have that item in the bank")
+		}
+
+		// make sure there are enough items in the bank
+		if amount > existingItems[0].Quantity {
+			return errors.New("there is not enough of that item in the bank")
+		}
+	}
+
+	// the withdraw is valid
+	return nil
 }
 
 // GuildBank returns the build bank object associated with the current context

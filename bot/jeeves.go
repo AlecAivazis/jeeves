@@ -13,11 +13,10 @@ import (
 
 // JeevesBot provides context for the discord handlers
 type JeevesBot struct {
-	Database *db.Client
-	Discord  *discordgo.Session
+	Database          *db.Client
+	Discord           *discordgo.Session
+	ReactionCallbacks map[string][]func(string)
 }
-
-type ReactionCallback func(*Message)
 
 type Message struct {
 	discordgo.Message
@@ -50,9 +49,36 @@ func (b *JeevesBot) Reply(ctx *CommandContext, message string) (*discordgo.Messa
 }
 
 func (b *JeevesBot) ReactionHandler(session *discordgo.Session, message *discordgo.MessageReactionAdd) {
-	fmt.Println(message.Emoji.APIName(), message.Emoji)
+	// if we have a callback for the message
+	if b.ReactionCallbacks[message.MessageID] == nil {
+		return
+	}
+
+	// invoke each of the callbacks with the reaction
+	for _, cb := range b.ReactionCallbacks[message.MessageID] {
+		cb(message.Emoji.APIName())
+	}
 }
 
-func (b *JeevesBot) RegisterMessageReactionCallback(message *Message, cb ReactionCallback) error {
+func (b *JeevesBot) UnregisterMessageReactionCallback(message *Message) error {
+	// remove the message id from the dispatch map
+	delete(b.ReactionCallbacks, message.ID)
+
+	// nothing went wrong
+	return nil
+}
+
+func (b *JeevesBot) RegisterMessageReactionCallback(message *Message, cb func(string)) error {
+	fmt.Println("Registering callback for ", message.ID)
+
+	// if we dont have an registered callbacks for the message make sure there is a list to add to
+	if b.ReactionCallbacks[message.ID] == nil {
+		b.ReactionCallbacks[message.ID] = []func(string){}
+	}
+
+	// add the callback to the list
+	b.ReactionCallbacks[message.ID] = append(b.ReactionCallbacks[message.ID], cb)
+
+	// nothing went wrong
 	return nil
 }
