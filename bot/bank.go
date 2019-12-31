@@ -30,7 +30,7 @@ const (
 	// CommandRefreshBank can be used to force the bank to be re-rendered
 	CommandRefreshBank = "refresh-bank"
 	// CommandRequest can be used to submit a request to be fulfilled by a banker
-	CommandRequest = "request-test"
+	CommandRequest = "request"
 )
 
 const (
