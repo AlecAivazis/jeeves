@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -37,18 +38,33 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 	}
 
 	var err error
+	var done = true
 	// check the command against our known strings
 	switch command {
 	case CommandAssignBankChannel:
-		err = b.InitializeBankChannel(ctx)
+		done, err = b.InitializeBankChannel(ctx)
 	case CommandDeposit:
-		err = b.DepositItems(ctx, ParseItems(words[1]))
+		if len(words) == 1 {
+			err = errors.New("you did not give me items to deposit")
+		} else {
+			done, err = b.DepositItems(ctx, ParseItems(words[1]))
+		}
 	case CommandWithdraw:
-		err = b.WithdrawItems(ctx, ParseItems(words[1]))
+		if len(words) == 1 {
+			err = errors.New("you did not give me items to withdraw")
+		} else {
+			done, err = b.WithdrawItems(ctx, ParseItems(words[1]))
+		}
 	case CommandRequest:
-		err = b.RequestItems(ctx, ParseItems(words[1]))
+		if len(words) == 1 {
+			err = errors.New("you did not give me items to request")
+		} else {
+			done, err = b.RequestItems(ctx, ParseItems(words[1]))
+		}
 	case CommandRefreshBank:
 		err = b.UpdateBankListing(ctx)
+	default:
+		return
 	}
 	// if the command failed
 	if err != nil {
@@ -57,10 +73,13 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 		return
 	}
 
-	// confirm the action with a reaction
-	err = b.Discord.MessageReactionAdd(message.ChannelID, message.ID, "👍")
-	if err != nil {
-		b.ReportError(message.ChannelID, err)
+	// if we are supposed to confirm
+	if done {
+		// confirm the action with a reaction
+		err = b.Discord.MessageReactionAdd(message.ChannelID, message.ID, "👍")
+		if err != nil {
+			b.ReportError(message.ChannelID, err)
+		}
 	}
 }
 

@@ -30,7 +30,7 @@ const (
 	// CommandRefreshBank can be used to force the bank to be re-rendered
 	CommandRefreshBank = "refresh-bank"
 	// CommandRequest can be used to submit a request to be fulfilled by a banker
-	CommandRequest = "request"
+	CommandRequest = "request-test"
 )
 
 const (
@@ -55,17 +55,17 @@ type Transaction struct {
 }
 
 // InitializeBankChannel is called when the user intends to assign a channel for use to display the bank
-func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
+func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 	// confirm the action with the user
 	_, err := b.Reply(ctx, "Okay! Please give me a moment to set up your guild bank...")
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// if we haven't defined the banker role yet
 	roles, err := b.Discord.GuildRoles(ctx.GuildID)
 	if err != nil {
-		return err
+		return false, err
 	}
 	definedBanker := false
 	for _, role := range roles {
@@ -80,7 +80,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 		_, err = b.Reply(ctx, "I am creating the Banker role. Assign this to non-Admin users you want"+
 			" to give permission to move items in and out of the bank.")
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		// create the banker role
@@ -93,7 +93,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 			// edit the role we just made (not sure why we couldn't do this when we created it to begin with...)
 			_, err = b.Discord.GuildRoleEdit(ctx.GuildID, role.ID, RoleBanker, role.Color, role.Hoist, role.Permissions, role.Mentionable)
 			if err != nil {
-				return err
+				return false, err
 			}
 
 			// if there was a problem, we still want to continue
@@ -111,7 +111,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 		" delete any other message in this channel but please do not delete this message. I will update it as your bankers"+
 		" add items to the bank.")
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// we need to find and update the bank record for this guild
@@ -124,7 +124,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 		Where(wherePredicates...).
 		All(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// if we have never recorded a bank for this guild
@@ -132,7 +132,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 		// grab the guild from context
 		guild, err := b.GuildFromContext(ctx)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		// create the entry for the bank
@@ -142,7 +142,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 			SetDisplayMessageID(display.ID).
 			Save(ctx)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 	} else {
@@ -153,30 +153,30 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) error {
 			SetDisplayMessageID(display.ID).
 			Save(ctx)
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
 
 	// nothing went wrong
-	return nil
+	return true, nil
 }
 
 // WithdrawItems is used when the user wants to withdraw the specified items from the bank. Will update the display message.
-func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
+func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure the user has the right permissions
 	if err := b.userCanModifyBank(ctx); err != nil {
-		return err
+		return false, err
 	}
 
 	// find the bank for this guild
 	guildBank, err := b.GuildBank(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	transactions, err := ParseTransactions(items)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// we need to add each item to the database
@@ -189,7 +189,7 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 		if item == ItemIDGold {
 			// if the guild does not have enough balance
 			if guildBank.Balance < amount {
-				return errors.New("we don't have that much money in the bank")
+				return false, errors.New("we don't have that much money in the bank")
 			}
 
 			// decrement the guild bance
@@ -205,18 +205,18 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 			Where(bankitem.ItemID(item)).
 			All(ctx)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		// if we haven't seen the item before
 		if len(existingItems) == 0 {
 			// we can't withdraw it!
-			return errors.New("it does not look like we have that item in the bank")
+			return false, errors.New("it does not look like we have that item in the bank")
 		}
 
 		// make sure there are enough items in the bank
 		if amount > existingItems[0].Quantity {
-			return errors.New("there is not enough of that item in the bank")
+			return false, errors.New("there is not enough of that item in the bank")
 		}
 
 		// if withdrawing this item will take its quantity to zero
@@ -231,30 +231,30 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) error {
 		}
 
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
 
 	// once we are done adding the items we should update the listing
-	return b.UpdateBankListing(ctx)
+	return true, b.UpdateBankListing(ctx)
 }
 
 // DepositItems is used when the user wants to deposit the specified items into the bank. Will update the display message.
-func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
+func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure the user has the right permissions
 	if err := b.userCanModifyBank(ctx); err != nil {
-		return err
+		return false, err
 	}
 
 	// find the bank for this guild
 	guildBank, err := b.GuildBank(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	transactions, err := ParseTransactions(items)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// we need to add each item to the database
@@ -278,7 +278,7 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 			Where(bankitem.ItemID(item)).
 			All(ctx)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		// if we haven't seen the item before
@@ -290,7 +290,7 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 				SetBank(guildBank).
 				Save(ctx)
 			if err != nil {
-				return err
+				return false, err
 			}
 
 			// we're done processing this item
@@ -303,17 +303,17 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) error {
 			AddQuantity(amount).
 			Exec(ctx)
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
 
 	// once we are done adding the items we should update the listing
-	return b.UpdateBankListing(ctx)
+	return true, b.UpdateBankListing(ctx)
 }
 
-func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) error {
+func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, error) {
 	// listen for the indication that the banker sent the items
-	return ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(m *Message) {
+	return false, ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(m *Message) {
 		fmt.Println(m.Content)
 	})
 }
