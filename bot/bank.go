@@ -301,6 +301,9 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 		return false, err
 	}
 
+	// confirm that we see the withdraw
+	b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👀")
+
 	// listen for the indication that the banker sent the items
 	// that reaction can be any of the following: ☑️, ✔️, or ✅
 	return false, ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(reaction string) {
@@ -314,7 +317,7 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 			}
 
 			// confirm that we performed the withdraw
-			err = b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👍")
+			b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👍")
 
 			// we don't need to listen for reactions to this message any more
 			ctx.Bot.UnregisterMessageReactionCallback(ctx.Message)
