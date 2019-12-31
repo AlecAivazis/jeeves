@@ -3,10 +3,9 @@ package bot
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/bwmarrin/discordgo"
-
-	_ "github.com/lib/pq"
 
 	"github.com/AlecAivazis/jeeves/db"
 )
@@ -16,6 +15,7 @@ type JeevesBot struct {
 	Database          *db.Client
 	Discord           *discordgo.Session
 	ReactionCallbacks map[string][]func(string)
+	cbMutex           sync.Mutex
 }
 
 type Message struct {
@@ -62,7 +62,9 @@ func (b *JeevesBot) ReactionHandler(session *discordgo.Session, message *discord
 
 func (b *JeevesBot) UnregisterMessageReactionCallback(message *Message) error {
 	// remove the message id from the dispatch map
+	b.cbMutex.Lock()
 	delete(b.ReactionCallbacks, message.ID)
+	b.cbMutex.Unlock()
 
 	// nothing went wrong
 	return nil
@@ -71,6 +73,9 @@ func (b *JeevesBot) UnregisterMessageReactionCallback(message *Message) error {
 func (b *JeevesBot) RegisterMessageReactionCallback(message *Message, cb func(string)) error {
 	fmt.Println("Registering callback for ", message.ID)
 
+	// ensure atomic access to the list of callbacks
+	b.cbMutex.Lock()
+
 	// if we dont have an registered callbacks for the message make sure there is a list to add to
 	if b.ReactionCallbacks[message.ID] == nil {
 		b.ReactionCallbacks[message.ID] = []func(string){}
@@ -78,6 +83,9 @@ func (b *JeevesBot) RegisterMessageReactionCallback(message *Message, cb func(st
 
 	// add the callback to the list
 	b.ReactionCallbacks[message.ID] = append(b.ReactionCallbacks[message.ID], cb)
+
+	// we're done modifying the callback list
+	b.cbMutex.Unlock()
 
 	// nothing went wrong
 	return nil
