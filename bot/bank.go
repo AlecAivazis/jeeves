@@ -313,6 +313,9 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 				return
 			}
 
+			// confirm that we performed the withdraw
+			err = b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👍")
+
 			// we don't need to listen for reactions to this message any more
 			ctx.Bot.UnregisterMessageReactionCallback(ctx.Message)
 		}
