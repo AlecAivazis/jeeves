@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -10,9 +11,10 @@ import (
 // CommandContext holds the contextual information for a message that we receive
 type CommandContext struct {
 	context.Context
+	Bot       *JeevesBot
 	GuildID   string
 	ChannelID string
-	Message   *discordgo.Message
+	Message   *Message
 }
 
 // CommandHandler handles the parsing and dispatching of commands for Jeeves
@@ -28,29 +30,41 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 
 	// construct the context object
 	ctx := &CommandContext{
+		Bot:       b,
 		GuildID:   message.GuildID,
 		ChannelID: message.ChannelID,
 		Context:   context.Background(),
-		Message:   message.Message,
+		Message:   &Message{Message: *message.Message},
 	}
 
 	var err error
+	var done = true
 	// check the command against our known strings
 	switch command {
 	case CommandAssignBankChannel:
-		err = b.InitializeBankChannel(ctx)
+		done, err = b.InitializeBankChannel(ctx)
 	case CommandDeposit:
-		// there could be trailing white space around the word
-		trimmed := strings.Trim(words[1], ", ")
-
-		err = b.DepositItems(ctx, strings.Split(trimmed, ","))
+		if len(words) == 1 {
+			err = errors.New("you did not give me items to deposit")
+		} else {
+			done, err = b.DepositItems(ctx, ParseItems(words[1]))
+		}
 	case CommandWithdraw:
-		// there could be trailing white space around the word
-		trimmed := strings.Trim(words[1], ", ")
-
-		err = b.WithdrawItems(ctx, strings.Split(trimmed, ","))
+		if len(words) == 1 {
+			err = errors.New("you did not give me items to withdraw")
+		} else {
+			done, err = b.WithdrawItems(ctx, ParseItems(words[1]))
+		}
+	case CommandRequest:
+		if len(words) == 1 {
+			err = errors.New("you did not give me items to request")
+		} else {
+			done, err = b.RequestItems(ctx, ParseItems(words[1]))
+		}
 	case CommandRefreshBank:
 		err = b.UpdateBankListing(ctx)
+	default:
+		return
 	}
 	// if the command failed
 	if err != nil {
@@ -59,9 +73,16 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 		return
 	}
 
-	// confirm the action with a reaction
-	err = b.Discord.MessageReactionAdd(message.ChannelID, message.ID, "👍")
-	if err != nil {
-		b.ReportError(message.ChannelID, err)
+	// if we are supposed to confirm
+	if done {
+		// confirm the action with a reaction
+		err = b.Discord.MessageReactionAdd(message.ChannelID, message.ID, "👍")
+		if err != nil {
+			b.ReportError(message.ChannelID, err)
+		}
 	}
+}
+
+func ParseItems(input string) []string {
+	return strings.Split(strings.Trim(input, ", "), ",")
 }
