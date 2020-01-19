@@ -164,7 +164,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 // WithdrawItems is used when the user wants to withdraw the specified items from the bank. Will update the display message.
 func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure the user has the right permissions
-	if err := b.ValidateWithdraw(ctx, items); err != nil {
+	if err := b.ValidateWithdraw(ctx, items, true); err != nil {
 		return false, err
 	}
 
@@ -297,7 +297,7 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, err
 
 func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure we would be able to perform the withdraw (ie, the item names are valid)
-	if err := b.ValidateWithdraw(ctx, items); err != nil {
+	if err := b.ValidateWithdraw(ctx, items, false); err != nil {
 		return false, err
 	}
 
@@ -325,10 +325,12 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 	})
 }
 
-func (b *JeevesBot) ValidateWithdraw(ctx *CommandContext, items []string) error {
+func (b *JeevesBot) ValidateWithdraw(ctx *CommandContext, items []string, checkRole bool) error {
 	// make sure the user has the right permissions
-	if err := b.userCanModifyBank(ctx); err != nil {
-		return err
+	if checkRole {
+		if err := b.userCanModifyBank(ctx); err != nil {
+			return err
+		}
 	}
 
 	// find the bank for this guild
