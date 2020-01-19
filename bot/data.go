@@ -10,7 +10,7 @@ package bot
 // find all and replace in data.go:				(.*)\t(.*) -> "$1": "$2",
 // clean up file to look correct and format:	gofmt -w .
 
-var itemNumbers = map[string]string{
+var itemData = map[string]string{
 	"\"Mage-Eye\" Blunderbuss":              "3041",
 	"(OLD)Heavy Throwing Axe":               "3136",
 	"(OLD)Medium Throwing Axe":              "3128",

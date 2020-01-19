@@ -2,12 +2,15 @@ package bot
 
 import (
 	"errors"
+
+	"strings"
 )
 
 // ItemIDGold is the item id that we use to internall represent a gold deposit/withdrawl
 var ItemIDGold = "gold"
 
 var itemNames = map[string]string{}
+var itemIDs = map[string]string{}
 
 // ItemID returns the WoW item ID for the item with the given name
 func ItemID(name string) (string, error) {
@@ -17,7 +20,7 @@ func ItemID(name string) (string, error) {
 	}
 
 	// if we have an entry for that item, use it
-	if item, ok := itemNumbers[properTitle(name)]; ok {
+	if item, ok := itemIDs[strings.ToLower(name)]; ok {
 		return item, nil
 	}
 
@@ -38,8 +41,8 @@ func ItemName(id string) (string, error) {
 
 func init() {
 	// invert each entry in the map so we can look up names if we have the ID
-	for name := range itemNumbers {
-		itemID, _ := ItemID(name)
-		itemNames[itemID] = name
+	for name, id := range itemData {
+		itemNames[id] = name
+		itemIDs[strings.ToLower(name)] = id
 	}
 }
