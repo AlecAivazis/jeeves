@@ -47,7 +47,7 @@ func Start() {
 	bot := &JeevesBot{
 		Database:          client,
 		Discord:           dg,
-		ReactionCallbacks: make(map[string][]func(string)),
+		ReactionCallbacks: make(map[string][]ReactionCallback),
 	}
 
 	// add the various handlers

@@ -18,6 +18,7 @@ import (
 	"github.com/AlecAivazis/jeeves/db/guild"
 	"github.com/AlecAivazis/jeeves/db/guildbank"
 	"github.com/AlecAivazis/jeeves/db/predicate"
+	"github.com/bwmarrin/discordgo"
 )
 
 const (
@@ -164,6 +165,11 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 // WithdrawItems is used when the user wants to withdraw the specified items from the bank. Will update the display message.
 func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure the user has the right permissions
+	if err := b.userCanModifyBank(ctx, ctx.Message.Member); err != nil {
+		return false, err
+	}
+
+	// make sure the user has the right permissions
 	if err := b.ValidateWithdraw(ctx, items); err != nil {
 		return false, err
 	}
@@ -226,7 +232,7 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, er
 // DepositItems is used when the user wants to deposit the specified items into the bank. Will update the display message.
 func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure the user has the right permissions
-	if err := b.userCanModifyBank(ctx); err != nil {
+	if err := b.userCanModifyBank(ctx, ctx.Message.Member); err != nil {
 		return false, err
 	}
 
@@ -306,9 +312,21 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 
 	// listen for the indication that the banker sent the items
 	// that reaction can be any of the following: ☑️, ✔️, or ✅
-	return false, ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(reaction string) {
+	return false, ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(reaction *discordgo.MessageReactionAdd) {
+		// get the user object
+		member, err := b.Discord.State.Member(reaction.GuildID, reaction.UserID)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// make sure the user has the right permissions
+		if err := b.userCanModifyBank(ctx, member); err != nil {
+			return
+		}
+
 		// if the reaction is one of the approved ones
-		if strings.Contains("☑️✔️✅", reaction) {
+		if strings.Contains("☑️✔️✅", reaction.Emoji.APIName()) {
 			// perform the withdraw
 			_, err := b.WithdrawItems(ctx, items)
 			if err != nil {
@@ -326,11 +344,6 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 }
 
 func (b *JeevesBot) ValidateWithdraw(ctx *CommandContext, items []string) error {
-	// make sure the user has the right permissions
-	if err := b.userCanModifyBank(ctx); err != nil {
-		return err
-	}
-
 	// find the bank for this guild
 	guildBank, err := b.GuildBank(ctx)
 	if err != nil {
@@ -416,7 +429,7 @@ func ParseTransactions(before []string) ([]Transaction, error) {
 }
 
 // userCanModifyBank returns an error if the user shouldn't be allowed to touch the bank
-func (b *JeevesBot) userCanModifyBank(ctx *CommandContext) error {
+func (b *JeevesBot) userCanModifyBank(ctx *CommandContext, member *discordgo.Member) error {
 	// look up the roles in the guild so we can compare role IDs
 	roles, err := b.Discord.GuildRoles(ctx.GuildID)
 	if err != nil {
@@ -437,7 +450,7 @@ func (b *JeevesBot) userCanModifyBank(ctx *CommandContext) error {
 	}
 
 	// see if the author of th emessage has the bank role
-	for _, roleID := range ctx.Message.Member.Roles {
+	for _, roleID := range member.Roles {
 		if roleID == bankRoleID {
 			return nil
 		}
