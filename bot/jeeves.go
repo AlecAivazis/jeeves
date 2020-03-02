@@ -92,3 +92,19 @@ func (b *JeevesBot) RegisterMessageReactionCallback(message *Message, cb Reactio
 	// nothing went wrong
 	return nil
 }
+
+func (b *JeevesBot) MemberName(ctx *CommandContext, user *discordgo.User) string {
+	// look up the membership for this user
+	member, err := b.Discord.GuildMember(ctx.GuildID, user.ID)
+	if err != nil {
+		return ""
+	}
+
+	// if there is a nickname use it
+	if member.Nick != "" {
+		return member.Nick
+	}
+
+	// theres no nickname so the username will have to do
+	return user.Username
+}
