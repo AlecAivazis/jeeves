@@ -12,7 +12,6 @@ func main() {
 		if r := recover(); r != nil {
 			// keep the bot running
 			bot.Start()
-
 		}
 	}()
 
