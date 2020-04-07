@@ -591,6 +591,24 @@ Bank Contents:
 {{- end }}
 `
 
+func formatGold(balance int) string {
+	// the amount of copper will be what's left
+	copper := float64(balance)
+
+	// the amount of gold
+	gold := math.Floor(float64(balance) / 10000)
+	// remove the amount of gold
+	copper -= gold * 10000
+
+	// the amount of silver left
+	silver := math.Floor(float64(copper) / 100)
+	// remove the amount of silver
+	copper -= silver * 100
+
+	// return the for
+	return fmt.Sprintf("%vg %vs %vc", gold, silver, copper)
+}
+
 func init() {
 	displayTemplate = template.Must(template.New("bank-display").Funcs(template.FuncMap{
 		"itemName": func(id string) string {
@@ -603,22 +621,6 @@ func init() {
 			return id
 
 		},
-		"format": func(balance int) string {
-			// the amount of copper will be what's left
-			copper := float64(balance)
-
-			// the amount of gold
-			gold := math.Floor(float64(balance) / 10000)
-			// remove the amount of gold
-			copper -= gold * 10000
-
-			// the amount of silver left
-			silver := math.Floor(float64(copper) / 100)
-			// remove the amount of silver
-			copper -= silver * 100
-
-			// return the for
-			return fmt.Sprintf("%vg %vs %vc", gold, silver, copper)
-		},
+		"format": formatGold,
 	}).Parse(BankDisplayContents))
 }
