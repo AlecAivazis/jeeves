@@ -609,18 +609,20 @@ func formatGold(balance int) string {
 	return fmt.Sprintf("%vg %vs %vc", gold, silver, copper)
 }
 
+func itemName(id string) string {
+	// if the id is something we recognize
+	if name, ok := itemNames[id]; ok {
+		return name
+	}
+
+	// backwards compatability is hard
+	return id
+
+}
+
 func init() {
 	displayTemplate = template.Must(template.New("bank-display").Funcs(template.FuncMap{
-		"itemName": func(id string) string {
-			// if the id is something we recognize
-			if name, ok := itemNames[id]; ok {
-				return name
-			}
-
-			// backwards compatability is hard
-			return id
-
-		},
-		"format": formatGold,
+		"itemName": itemName,
+		"format":   formatGold,
 	}).Parse(BankDisplayContents))
 }
