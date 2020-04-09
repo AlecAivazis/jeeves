@@ -11,6 +11,6 @@ end
 -- invoked by ace when the addon is disabled
 function JeevesAddon:OnDisable()
     -- unregister slash commands
-    JeevesAddon:UnregisterChatCommand("gamble")
-    JeevesAddon:UnregisterChatCommand("gmb")
+    JeevesAddon:UnregisterChatCommand("jeeves")
+    JeevesAddon:UnregisterChatCommand("jvs")
 end

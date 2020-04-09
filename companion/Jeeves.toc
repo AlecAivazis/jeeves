@@ -5,8 +5,11 @@
 ## Version: 0.0.0
 ## OptionalDeps: Ace3
 
+## SavedVariables: CharacterInventories
+
 embeds.xml
 
 src\addon.lua
+src\inventory.lua
 
 src\cmd.lua
