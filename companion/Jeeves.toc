@@ -10,4 +10,3 @@ embeds.xml
 src\addon.lua
 
 src\cmd.lua
-src\ui.lua
