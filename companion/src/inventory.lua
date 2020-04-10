@@ -1,25 +1,19 @@
 -- need a frame to respond to events
 local frame, events = CreateFrame("Frame"), {};
 
--- the ids of the bank slots
-
 function events:BANKFRAME_OPENED(...)
-    -- if the player is a registered bank alt then we need to track the bank
-    -- contents
-    if IsBankAlt() then
-        -- reset the cached inventory
-        ResetCachedBank()
+    -- reset the cached inventory
+    ResetCachedBank()
 
-        -- export the bank container
-        saveBag(BANK_CONTAINER)
-        -- export every bag slot
-        for slot = 0, NUM_BAG_SLOTS + NUM_BANKBAGSLOTS do
-            saveBag(slot)
-        end
+    -- export the bank container
+    saveBag(BANK_CONTAINER, CachedBank())
+    -- export every bank slot
+    for slot = NUM_BAG_SLOTS+1, NUM_BAG_SLOTS+NUM_BANKBAGSLOTS do
+        saveBag(slot, CachedBank())
     end
 end
 
-function saveBag(bagID)
+function saveBag(bagID, target)
     -- look up the number of slots in the bag
     for slot = 1, GetContainerNumSlots(bagID) do
         -- look up the item information at the slot
@@ -28,16 +22,29 @@ function saveBag(bagID)
         -- if we have an item in this slot
         if itemCount ~= nil then
             -- if we don't have an entry in the user's inventory for the
-            if CachedBank()[itemID] == nil then
-                CachedBank()[itemID] = itemCount
+            if target[itemID] == nil then
+                target[itemID] = itemCount
             else
-                CachedBank()[itemID] = CachedBank()[itemID] + itemCount
+                target[itemID] = target[itemID] + itemCount
             end
         end
     end
 end
 
+function CurrentInventory()
+    -- lets build up a table of the players inventory
+    local inventory = {}
 
+    for itemID, count in pairs(CachedBank()) do
+        inventory[itemID] = count
+    end
+
+    for slot = 0, NUM_BAG_SLOTS do
+        saveBag(slot, inventory)
+    end
+
+    return inventory
+end
 
 
 -- implementation details
