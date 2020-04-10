@@ -1,5 +1,7 @@
 local AceGUI = LibStub("AceGUI-3.0")
 
+local MessageLimit = 2000
+
 -- the entrypoint for chat based interactions
 function JeevesAddon:ParseCmd(input)
     -- remove any slashes from the command
@@ -15,16 +17,6 @@ function JeevesAddon:ParseCmd(input)
         return JeevesAddon:ExportCmd()
     end
 
-    -- /jeeves register
-    if input == "register" then
-        return JeevesAddon:RegisterCmd()
-    end
-
-    -- /jeeves unregister
-    if input == "unregister" then
-        return JeevesAddon:UnRegisterCmd()
-    end
-
     -- we did not recognize the command
     print("Unrecognized command: \"" .. input .."\".  Please try again.")
 end
@@ -32,43 +24,7 @@ end
 -- a command with no inputs
 function JeevesAddon:RootCmd()
     print("Jeeves Companion v0.0.0")
-    print("|cFF80FF80/jeeves register|r - |cFFFF8080register the current character as a bank alt|r")
-    print("|cFF80FF80/jeeves unregister|r - |cFFFF8080unregister the current character as a bank alt|r")
     print("|cFF80FF80/jeeves export|r - |cFFFF8080export the changes your inventories|r")
-end
-
--- a command that registers the current character as a bank alt
-function JeevesAddon:RegisterCmd()
-    -- if we haven't added a character before
-    if CharacterInventories == nil then
-        -- create the empty table of characters
-        CharacterInventories = {}
-    end
-
-    -- add the players GUID to the table
-    CharacterInventories[UnitGUID("player")] = {}
-
-    print("Registered", GetUnitName("player"), "as a bank alt.")
-end
-
--- a command that registers the current character as a bank alt
-function JeevesAddon:UnRegisterCmd()
-    -- if we haven't added a character before
-    if CharacterInventories == nil then
-        -- create the empty table of characters
-        CharacterInventories = {}
-    end
-
-    -- if the player is a registered bank alt
-    if IsBankAlt() then
-        -- remove the entry for that user in the table
-        CharacterInventories[UnitGUID("player")] = nil
-
-        -- confirm our action with the user
-        print("Unregistered", GetUnitName("player"), "as a bank alt.")
-    else
-        print(GetUnitName("player"), "is not a bank alt.")
-    end
 end
 
 -- the command to export the delta between the last known inventory for this
@@ -83,25 +39,71 @@ function JeevesAddon:ExportCmd()
     print("Exporting inventory...")
 
     -- build up the command the user needs to submit
-    local command = "!deposit "
-    for itemID, count in pairs(CachedBank()) do
-        itemName = GetItemInfo(itemID)
-        command = command ..     count ..    "x " ..    itemName ..    ","
+    local stem = "!deposit "
+
+    -- we need to break up the commands in 2000 character messages
+    local commands = {}
+    -- save a running count of the number of items we're exporting
+    local totalCount = 0
+
+    local currentCommand = stem
+    for itemID, count in pairs(CurrentInventory()) do
+        -- the entry we are going to add for this item
+        local depositEntry = count ..    "x " .. GetItemInfo(itemID) .. ","
+        -- increment the total
+        totalCount = totalCount + count
+
+        -- if this entry will bring us above the limit
+        if currentCommand:len() + depositEntry:len() > MessageLimit then
+            -- add the current command to the list
+            table.insert(commands, currentCommand:sub(0, currentCommand:len()-1))
+
+            -- reset the current command
+            currentCommand = stem .. depositEntry
+        else
+            -- add the entry to the running command
+            currentCommand = currentCommand .. depositEntry
+        end
     end
-    command = command:sub(0, command:len()-1)
+
+    -- add whatever command we were building up at the end
+    table.insert(commands, currentCommand:sub(0, currentCommand:len()-1))
 
     -- we need to create a frame with the command
     local commandFrame = AceGUI:Create("Frame");
     commandFrame:SetWidth(500)
-    commandFrame:SetHeight(125)
+    commandFrame:SetHeight(100 * table.getn(commands))
     commandFrame:SetTitle("Inventory Export")
     commandFrame:EnableResize(false)
 
+    local spacer = AceGUI:Create("Label")
+    spacer:SetText(" ")
+    spacer:SetFontObject(GameFontHighlight)
+    commandFrame:AddChild(spacer)
 
-    -- add the command in an edit box inside of the frame
-    local editBox = AceGUI:Create("EditBox")
-    editBox:SetWidth(450)
-    editBox:SetHeight(50)
-    editBox:SetText(command)
-    commandFrame:AddChild(editBox)
+    -- add some text to the frame to tell the user what they are looking at
+    local text  = AceGUI:Create("Label")
+    text:SetFullWidth(true)
+    text:SetFontObject(GameFontHighlight)
+    commandFrame:AddChild(text)
+
+    -- the message to show
+    local message  = "Exporting " .. totalCount .. " items. "
+    -- if there is more than one message to show, explain it
+    if table.getn(commands) > 1 then
+        message = message .. "This must be done in " .. table.getn(commands) .. " messages."
+    end
+
+    -- use the messages
+    text:SetText(message)
+
+    -- we need an edit box for every command the banker needs
+    -- to submit
+    for _, command in pairs(commands) do
+        local editBox = AceGUI:Create("EditBox")
+        editBox:SetWidth(450)
+        editBox:SetHeight(50)
+        editBox:SetText(command)
+        commandFrame:AddChild(editBox)
+    end
 end
