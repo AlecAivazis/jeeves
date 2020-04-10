@@ -30,29 +30,19 @@ end
 -- the command to export the delta between the last known inventory for this
 -- bank and the current inventory
 function JeevesAddon:ExportCmd()
-    -- if we haven't added a character before
-    if CharacterInventories == nil then
-        -- create the empty table of characters
-        CharacterInventories = {}
-    end
-
-    -- if we haven't added a character before
-    if LatestExports == nil then
-        -- create the empty table of characters
-        LatestExports = {}
-    end
-
-    -- build up the command the user needs to submit
-    local stem = "!deposit "
-
-
     -- we have to compute the total transactions to go from what we
     -- last had to what we have now
     local deposits, withdrawls = computeExports(LatestExports[UnitGUID("player")], CurrentInventory())
+    -- get the list of commands corresponding to each
+    local depositCommands, totalDeposits = buildCommands("!deposit ", deposits)
+    local withdrawlCommands, totalWithdrawls = buildCommands("!withdraw ", withdrawls)
+
+    local totalCommands = table.getn(depositCommands) + table.getn(withdrawlCommands)
 
     -- we need to create a frame with the command
     local commandFrame = AceGUI:Create("Frame");
     commandFrame:SetWidth(500)
+    commandFrame:SetHeight(100 * totalCommands)
     commandFrame:SetTitle("Inventory Export")
     commandFrame:EnableResize(false)
 
@@ -67,65 +57,45 @@ function JeevesAddon:ExportCmd()
     text:SetFontObject(GameFontHighlight)
     commandFrame:AddChild(text)
 
-    -- the message to show
-    local withdralMessage  = ""
-    local depositMessage = ""
-    local totalCommands = 0
+    local message = ""
 
-    -- if there are deposits
-    if deposits ~= nil then
-        local commands, totalCount = buildCommands("!deposit ", deposits)
+    -- if nothing was exported, tell the user
+    if totalDeposits == 0 and totalWithdrawls == 0 then
+        message = "You have no items to export."
 
-        -- if there is something to deposit
-        if totalCount > 0 then
-            totalCommands = totalCommands + table.getn(commands)
-
-            depositMessage = "Depositing " .. totalCount .. " items."
-
-            -- we need an edit box for every command the banker needs
-            -- to submit
-            for _, command in pairs(commands) do
-                local editBox = AceGUI:Create("EditBox")
-                editBox:SetWidth(450)
-                editBox:SetHeight(50)
-                editBox:SetText(command)
-                commandFrame:AddChild(editBox)
-            end
-        end
-    end
-
-    -- if there are deposits
-    if withdrawls ~= nil then
-        local commands, totalCount = buildCommands("!withdraw ", withdrawls)
-
-        -- if there is something to withdraw
-        if totalCount > 0 then
-            totalCommands = totalCommands + table.getn(commands)
-
-            withdralMessage = "Withdrawing " .. totalCount .. " items."
-
-            -- we need an edit box for every command the banker needs
-            -- to submit
-            for _, command in pairs(commands) do
-                local editBox = AceGUI:Create("EditBox")
-                editBox:SetWidth(450)
-                editBox:SetHeight(50)
-                editBox:SetText(command)
-                commandFrame:AddChild(editBox)
-            end
-        end
-    end
-
-    -- if both of the messages are empty
-    if withdralMessage == "" and depositMessage == "" then
-        withdralMessage = "You have no items to export."
+    -- notify them of what is going in an out
     else
-        depositMessage = depositMessage .. " This must be done in "
-                                        .. totalCommands .. " commands:"
+        if totalDeposits > 0 then
+            message = message .. "Depositing " .. totalDeposits .. " items."
+        end
+
+        if totalWithdrawls > 0 then
+            message = message .. " Withdrawing " .. totalWithdrawls .. " items."
+        end
     end
 
-    -- use the messages
-    text:SetText(withdralMessage .. depositMessage)
+    --  if it taks more than one command, tell them
+    if totalCommands > 1 then
+        message = message .. " This will take " .. totalCommands .. " separate commands."
+    end
+
+    -- update the message
+    text:SetText(message)
+
+    for _, command in pairs(depositCommands) do
+        local editBox = AceGUI:Create("EditBox")
+        editBox:SetWidth(450)
+        editBox:SetHeight(50)
+        editBox:SetText(command)
+        commandFrame:AddChild(editBox)
+    end
+    for _, command in pairs(withdrawlCommands) do
+        local editBox = AceGUI:Create("EditBox")
+        editBox:SetWidth(450)
+        editBox:SetHeight(50)
+        editBox:SetText(command)
+        commandFrame:AddChild(editBox)
+    end
 
     -- save this as the latest export for the player
     LatestExports[UnitGUID("player")] = CurrentInventory()
@@ -177,6 +147,10 @@ function buildCommands(stem, entries)
     -- save a running count of the number of items we're exporting
     local totalCount = 0
 
+    if entries == nil then
+        return {}, 0
+    end
+
     local currentCommand = stem
     for itemID, count in pairs(entries) do
         -- the entry we are going to add for this item
@@ -199,6 +173,10 @@ function buildCommands(stem, entries)
 
     -- add whatever command we were building up at the end
     table.insert(commands, currentCommand:sub(0, currentCommand:len()-1))
+
+    if totalCount == 0 then
+        return {}, 0
+    end
 
     return commands, totalCount
 end
