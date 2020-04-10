@@ -1,3 +1,5 @@
+local AceGUI = LibStub("AceGUI-3.0")
+
 -- the entrypoint for chat based interactions
 function JeevesAddon:ParseCmd(input)
     -- remove any slashes from the command
@@ -79,7 +81,27 @@ function JeevesAddon:ExportCmd()
     end
 
     print("Exporting inventory...")
-    for key, value in pairs(CharacterInventories) do
-        print(key, value)
+
+    -- build up the command the user needs to submit
+    local command = "!deposit "
+    for itemID, count in pairs(CachedBank()) do
+        itemName = GetItemInfo(itemID)
+        command = command ..     count ..    "x " ..    itemName ..    ","
     end
+    command = command:sub(0, command:len()-1)
+
+    -- we need to create a frame with the command
+    local commandFrame = AceGUI:Create("Frame");
+    commandFrame:SetWidth(500)
+    commandFrame:SetHeight(125)
+    commandFrame:SetTitle("Inventory Export")
+    commandFrame:EnableResize(false)
+
+
+    -- add the command in an edit box inside of the frame
+    local editBox = AceGUI:Create("EditBox")
+    editBox:SetWidth(450)
+    editBox:SetHeight(50)
+    editBox:SetText(command)
+    commandFrame:AddChild(editBox)
 end
