@@ -5,7 +5,7 @@
 ## Version: 0.0.0
 ## OptionalDeps: Ace3
 
-## SavedVariables: CharacterInventories
+## SavedVariables: CharacterInventories, LatestExports
 
 embeds.xml
 

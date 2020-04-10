@@ -35,8 +35,11 @@ function CurrentInventory()
     -- lets build up a table of the players inventory
     local inventory = {}
 
-    for itemID, count in pairs(CachedBank()) do
-        inventory[itemID] = count
+    -- if there is a cached bank
+    if CachedBank() ~= nil then
+        for itemID, count in pairs(CachedBank()) do
+            inventory[itemID] = count
+        end
     end
 
     for slot = 0, NUM_BAG_SLOTS do
