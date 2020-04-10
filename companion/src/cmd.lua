@@ -17,7 +17,7 @@ function JeevesAddon:ParseCmd(input)
     if input == "register" then
         return JeevesAddon:RegisterCmd()
     end
-    
+
     -- /jeeves unregister
     if input == "unregister" then
         return JeevesAddon:UnRegisterCmd()
@@ -38,7 +38,7 @@ end
 -- a command that registers the current character as a bank alt
 function JeevesAddon:RegisterCmd()
     -- if we haven't added a character before
-    if CharacterInventories == nil then 
+    if CharacterInventories == nil then
         -- create the empty table of characters
         CharacterInventories = {}
     end
@@ -52,28 +52,28 @@ end
 -- a command that registers the current character as a bank alt
 function JeevesAddon:UnRegisterCmd()
     -- if we haven't added a character before
-    if CharacterInventories == nil then 
+    if CharacterInventories == nil then
         -- create the empty table of characters
         CharacterInventories = {}
     end
 
     -- if the player is a registered bank alt
-    if CharacterInventories[UnitGUID("player")] ~= nil then
+    if IsBankAlt() then
         -- remove the entry for that user in the table
         CharacterInventories[UnitGUID("player")] = nil
-        
+
         -- confirm our action with the user
         print("Unregistered", GetUnitName("player"), "as a bank alt.")
-    else 
+    else
         print(GetUnitName("player"), "is not a bank alt.")
     end
 end
 
--- the command to export the delta between the last known inventory for this 
+-- the command to export the delta between the last known inventory for this
 -- bank and the current inventory
 function JeevesAddon:ExportCmd()
     -- if we haven't added a character before
-    if CharacterInventories == nil then 
+    if CharacterInventories == nil then
         -- create the empty table of characters
         CharacterInventories = {}
     end
@@ -82,4 +82,4 @@ function JeevesAddon:ExportCmd()
     for key, value in pairs(CharacterInventories) do
         print(key, value)
     end
-end 
+end
