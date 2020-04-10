@@ -18,6 +18,7 @@ import (
 	"github.com/AlecAivazis/jeeves/db/guild"
 	"github.com/AlecAivazis/jeeves/db/guildbank"
 	"github.com/AlecAivazis/jeeves/db/predicate"
+	"github.com/bwmarrin/discordgo"
 )
 
 const (
@@ -164,7 +165,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 // WithdrawItems is used when the user wants to withdraw the specified items from the bank. Will update the display message.
 func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure the user has the right permissions
-	if err := b.ValidateWithdraw(ctx, items, true); err != nil {
+	if err := b.ValidateWithdraw(ctx, items); err != nil {
 		return false, err
 	}
 
@@ -226,7 +227,7 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, er
 // DepositItems is used when the user wants to deposit the specified items into the bank. Will update the display message.
 func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure the user has the right permissions
-	if err := b.userCanModifyBank(ctx); err != nil {
+	if err := b.userCanModifyBank(ctx, ctx.Message.Member); err != nil {
 		return false, err
 	}
 
@@ -297,18 +298,27 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, err
 
 func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure we would be able to perform the withdraw (ie, the item names are valid)
-	if err := b.ValidateWithdraw(ctx, items, false); err != nil {
+	if err := b.ValidateWithdraw(ctx, items); err != nil {
 		return false, err
 	}
 
-	// confirm that we see the withdraw
-	b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👀")
-
 	// listen for the indication that the banker sent the items
 	// that reaction can be any of the following: ☑️, ✔️, or ✅
-	return false, ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(reaction string) {
+	err := ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(reaction *discordgo.MessageReactionAdd) {
+		// get the user object
+		member, err := b.Discord.State.Member(reaction.GuildID, reaction.UserID)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// make sure the user has the right permissions
+		if err := b.userCanModifyBank(ctx, member); err != nil {
+			return
+		}
+
 		// if the reaction is one of the approved ones
-		if strings.Contains("☑️✔️✅", reaction) {
+		if strings.Contains("☑️✔️✅", reaction.Emoji.APIName()) {
 			// perform the withdraw
 			_, err := b.WithdrawItems(ctx, items)
 			if err != nil {
@@ -323,16 +333,45 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 			ctx.Bot.UnregisterMessageReactionCallback(ctx.Message)
 		}
 	})
-}
+	if err != nil {
+		return false, err
+	}
 
-func (b *JeevesBot) ValidateWithdraw(ctx *CommandContext, items []string, checkRole bool) error {
-	// make sure the user has the right permissions
-	if checkRole {
-		if err := b.userCanModifyBank(ctx); err != nil {
-			return err
+	// notify all of the bankers that there is a request
+
+	// the message to send
+	message := fmt.Sprintf(
+		"Hey! It looks like %s wants to withdraw: %s",
+		b.MemberName(ctx, ctx.Message.Author),
+		strings.Join(items, ","),
+	)
+
+	// find the bankers in this guild
+	bankers, err := b.Bankers(ctx)
+	if err != nil {
+		return false, err
+	}
+	for _, banker := range bankers {
+		// grab a reference to the channel with the user
+		channel, err := b.Discord.UserChannelCreate(banker.User.ID)
+		if err != nil {
+			return false, err
+		}
+
+		// send a notification on the channel
+		_, err = b.Discord.ChannelMessageSend(channel.ID, message)
+		if err != nil {
+			return false, err
 		}
 	}
 
+	// confirm that we see the withdraw
+	b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👀")
+
+	return false, nil
+}
+
+func (b *JeevesBot) ValidateWithdraw(ctx *CommandContext, items []string) error {
 	// find the bank for this guild
 	guildBank, err := b.GuildBank(ctx)
 	if err != nil {
@@ -418,28 +457,15 @@ func ParseTransactions(before []string) ([]Transaction, error) {
 }
 
 // userCanModifyBank returns an error if the user shouldn't be allowed to touch the bank
-func (b *JeevesBot) userCanModifyBank(ctx *CommandContext) error {
-	// look up the roles in the guild so we can compare role IDs
-	roles, err := b.Discord.GuildRoles(ctx.GuildID)
+func (b *JeevesBot) userCanModifyBank(ctx *CommandContext, member *discordgo.Member) error {
+	// grab the id of the banker role
+	bankRoleID, err := b.BankerRoleID(ctx)
 	if err != nil {
-		return errors.New("I could not look up the roles of this server. Maybe I dont have the right persmissions?")
-	}
-
-	// find the id of the bank role
-	var bankRoleID string
-	for _, role := range roles {
-		if role.Name == RoleBanker {
-			bankRoleID = role.ID
-		}
-	}
-
-	// if we couldn't find the role
-	if bankRoleID == "" {
-		return errors.New("it doesn't look like you have the Banker role defined")
+		return err
 	}
 
 	// see if the author of th emessage has the bank role
-	for _, roleID := range ctx.Message.Member.Roles {
+	for _, roleID := range member.Roles {
 		if roleID == bankRoleID {
 			return nil
 		}
@@ -526,6 +552,67 @@ func parseTransaction(entry string) (Transaction, error) {
 
 	// we're done
 	return transaction, nil
+}
+
+func (b *JeevesBot) BankerRoleID(ctx *CommandContext) (string, error) {
+	// look up the roles in the guild so we can compare role IDs
+	roles, err := b.Discord.GuildRoles(ctx.GuildID)
+	if err != nil {
+		return "", errors.New("I could not look up the roles of this server. Maybe I dont have the right persmissions?")
+	}
+
+	// find the id of the bank role
+	var bankRoleID string
+	for _, role := range roles {
+		if role.Name == RoleBanker {
+			bankRoleID = role.ID
+		}
+	}
+
+	// if we couldn't find the role
+	if bankRoleID == "" {
+		return "", errors.New("it doesn't look like you have the Banker role defined")
+	}
+
+	// we found the role
+	return bankRoleID, nil
+}
+
+func (b *JeevesBot) Bankers(ctx *CommandContext) ([]*discordgo.Member, error) {
+	// get the first list of members
+	members, err := b.Discord.GuildMembers(ctx.GuildID, "", 1000)
+	if err != nil {
+		return nil, err
+	}
+
+	// we should keep looking
+	for true {
+		// get the next 1000
+		nextPage, err := b.Discord.GuildMembers(ctx.GuildID, members[len(members)-1].User.ID, 1000)
+		if err != nil {
+			return nil, err
+		}
+
+		// if there are no more
+		if len(nextPage) == 0 {
+			// stop looking
+			break
+		}
+
+		// add what we found to the list
+		members = append(members, nextPage...)
+	}
+
+	// the list of bankers
+	bankers := []*discordgo.Member{}
+
+	for _, member := range members {
+		if b.userCanModifyBank(ctx, member) == nil {
+			bankers = append(bankers, member)
+		}
+	}
+
+	return bankers, nil
 }
 
 //////////////////////////////////
