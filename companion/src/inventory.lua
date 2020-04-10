@@ -11,16 +11,15 @@ function events:BANKFRAME_OPENED(...)
         ResetCachedBank()
 
         -- export the bank container
-        saveBankTab(BANK_CONTAINER)
-
-        -- export every bank slot with a bag
-        for slot = NUM_BAG_SLOTS + 1, NUM_BAG_SLOTS + NUM_BANKBAGSLOTS do
-            saveBankTab(slot)
+        saveBag(BANK_CONTAINER)
+        -- export every bag slot
+        for slot = 0, NUM_BAG_SLOTS + NUM_BANKBAGSLOTS do
+            saveBag(slot)
         end
     end
 end
 
-function saveBankTab(bagID)
+function saveBag(bagID)
     -- look up the number of slots in the bag
     for slot = 1, GetContainerNumSlots(bagID) do
         -- look up the item information at the slot
