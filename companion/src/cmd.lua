@@ -17,6 +17,10 @@ function JeevesAddon:ParseCmd(input)
         return JeevesAddon:ExportCmd()
     end
 
+    if input == "unregister" then
+        return JeevesAddon:Unregister()
+    end
+
     -- we did not recognize the command
     print("Unrecognized command: \"" .. input .."\".  Please try again.")
 end
@@ -39,10 +43,15 @@ function JeevesAddon:ExportCmd()
 
     local totalCommands = table.getn(depositCommands) + table.getn(withdrawlCommands)
 
+    if totalCommands == 0 then
+        print("Sorry, there are no items to export.")
+        return
+    end
+
     -- we need to create a frame with the command
     local commandFrame = AceGUI:Create("Frame");
     commandFrame:SetWidth(500)
-    commandFrame:SetHeight(100 * totalCommands)
+    commandFrame:SetHeight(100 * (totalCommands + 0.5) )
     commandFrame:SetTitle("Inventory Export")
     commandFrame:EnableResize(false)
 
@@ -101,6 +110,12 @@ function JeevesAddon:ExportCmd()
     LatestExports[UnitGUID("player")] = CurrentInventory()
 end
 
+function JeevesAddon:Unregister()
+    if CachedBank() ~= nil then
+        ResetCachedBank()
+    end
+end
+
 function computeExports(latestExport, currentInventory)
     -- if we haven't seen anything before then its all deposits
     if latestExport == nil then
@@ -153,8 +168,9 @@ function buildCommands(stem, entries)
 
     local currentCommand = stem
     for itemID, count in pairs(entries) do
+        local itemName = GetItemInfo(itemID)
         -- the entry we are going to add for this item
-        local depositEntry = count ..    "x " .. GetItemInfo(itemID) .. ","
+        local depositEntry = count ..    "x " .. itemName .. ","
         -- increment the total
         totalCount = totalCount + count
 

@@ -13,6 +13,13 @@ function events:BANKFRAME_OPENED(...)
     end
 end
 
+function getn (myTable)
+    numItems = 0
+    for k,v in pairs(myTable) do
+        numItems = numItems + 1
+    end
+end
+
 function saveBag(bagID, target)
     -- look up the number of slots in the bag
     for slot = 1, GetContainerNumSlots(bagID) do
@@ -42,10 +49,12 @@ function CurrentInventory()
         end
     end
 
+    -- include every bag the character has
     for slot = 0, NUM_BAG_SLOTS do
         saveBag(slot, inventory)
     end
 
+    -- we're done
     return inventory
 end
 

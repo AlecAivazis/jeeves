@@ -8,4 +8,5 @@ end
 
 function ResetCachedBank()
     CharacterInventories[UnitGUID("player")] = {}
+    LatestExports[UnitGUID("player")] = {}
 end
