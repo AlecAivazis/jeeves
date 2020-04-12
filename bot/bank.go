@@ -374,6 +374,25 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 }
 
 func (b *JeevesBot) ResetBank(ctx *CommandContext) error {
+	// make  sure that the author of the message can modify the bank
+	if err := b.userCanModifyBank(ctx, ctx.Message.Member); err != nil {
+		return err
+	}
+
+	// delete every bank item associated with the guild bank
+	_, err := b.Database.BankItem.Delete().
+		Where(
+			bankitem.HasBankWith(
+				guildbank.HasGuildWith(
+					guild.DiscordID(ctx.GuildID),
+				),
+			),
+		).Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	// nothing went wrong
 	return nil
 }
 
