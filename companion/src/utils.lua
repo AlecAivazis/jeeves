@@ -1,16 +1,12 @@
-function IsBankAlt()
-    return CachedBank() ~= nil
-end
-
-function CachedBank()
+function cachedBank()
     return CharacterInventories[UnitGUID("player")]
 end
 
-function ResetCachedBank()
+function resetCachedBank()
     CharacterInventories[UnitGUID("player")] = {}
 end
 
-function LatestExport()
+function latestExport()
     return LatestExports[UnitGUID("player")]
 end
 

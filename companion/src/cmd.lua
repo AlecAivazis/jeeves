@@ -31,9 +31,10 @@ end
 
 
 function JeevesAddon:Reset()
+    local existingBank = cachedBank()
     -- clear the cached bank if it exists
-    if CachedBank() ~= nil and getn(CachedBank()) > 0 then
-        ResetCachedBank()
+    if existingBank ~= nil and getn(existingBank) > 0 then
+        resetCachedBank()
     end
     -- make sure we clear any export history
     LatestExports[UnitGUID("player")] = {}

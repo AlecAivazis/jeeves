@@ -3,13 +3,13 @@ local frame, events = CreateFrame("Frame"), {};
 
 function events:BANKFRAME_OPENED(...)
     -- reset the cached inventory
-    ResetCachedBank()
+    resetCachedBank()
 
     -- export the bank container
-    saveBag(BANK_CONTAINER, CachedBank())
+    saveBag(BANK_CONTAINER, cachedBank())
     -- export every bank slot
     for slot = NUM_BAG_SLOTS+1, NUM_BAG_SLOTS+NUM_BANKBAGSLOTS do
-        saveBag(slot, CachedBank())
+        saveBag(slot, cachedBank())
     end
 end
 
@@ -36,7 +36,7 @@ function CurrentInventory()
     local inventory = {}
 
     -- if there is a cached bank
-    if CachedBank() ~= nil then
+    if cachedBank() ~= nil then
         for itemID, count in pairs(CachedBank()) do
             inventory[itemID] = count
         end

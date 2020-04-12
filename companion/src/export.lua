@@ -77,6 +77,9 @@ function JeevesAddon:ExportCmd()
         editBox:SetText(command)
         commandFrame:AddChild(editBox)
     end
+
+    -- remember what we just exported
+    updateLatestExport()
 end
 
 -- computeExports computes the operations that update the bank (assumed to be at the state
