@@ -12,5 +12,6 @@ embeds.xml
 src\addon.lua
 src\inventory.lua
 src\utils.lua
+src\export.lua
 
 src\cmd.lua
