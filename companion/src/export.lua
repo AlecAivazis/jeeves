@@ -2,7 +2,8 @@ local AceGUI = LibStub("AceGUI-3.0")
 
 local DiscordMessageLimit = 2000
 
--- bank and the current inventory
+-- ExportCmd gives the user the list of commands necessary to update Jeeves with the
+-- current inventory of the bank alt
 function JeevesAddon:ExportCmd()
     -- we have to compute the total transactions to go from what we
     -- last had to what we have now
@@ -78,14 +79,8 @@ function JeevesAddon:ExportCmd()
     end
 end
 
-function updateLatestExport()
-    -- save this as the latest export for the player
-    LatestExports[UnitGUID("player")] = {}
-    for key, value in pairs(CurrentInventory()) do
-        LatestExports[UnitGUID("player")][key] = value
-    end
-end
-
+-- computeExports computes the operations that update the bank (assumed to be at the state
+-- specified by the first arg) to the state passed as the second arg
 function computeExports(latestExport, currentInventory)
     -- if we haven't seen anything before then its all deposits
     if latestExport == nil or getn(latestExport) == 0 then
@@ -127,6 +122,8 @@ function computeExports(latestExport, currentInventory)
     return deposits, withdrawls
 end
 
+-- buildCommands builds the list of string commands to send to jeeves, assuminig
+-- that a given command cannot exceed {DiscordMessageLimit}
 function buildCommands(stem, entries)
     local commands = {}
     -- save a running count of the number of items we're exporting
@@ -160,9 +157,20 @@ function buildCommands(stem, entries)
     -- add whatever command we were building up at the end
     table.insert(commands, currentCommand:sub(0, currentCommand:len()-1))
 
+    -- if there are no commands, return an empty list
     if totalCount == 0 then
         return {}, 0
     end
 
     return commands, totalCount
+end
+
+-- updateLatestExport saves the current inventory as the latest snapshot. This
+-- should be used when the user has confirmed they sent the messages to Jeeves
+function updateLatestExport()
+    -- save this as the latest export for the player
+    LatestExports[UnitGUID("player")] = {}
+    for key, value in pairs(CurrentInventory()) do
+        LatestExports[UnitGUID("player")][key] = value
+    end
 end
