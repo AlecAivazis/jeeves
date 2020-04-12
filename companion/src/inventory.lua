@@ -13,13 +13,6 @@ function events:BANKFRAME_OPENED(...)
     end
 end
 
-function getn (myTable)
-    numItems = 0
-    for k,v in pairs(myTable) do
-        numItems = numItems + 1
-    end
-end
-
 function saveBag(bagID, target)
     -- look up the number of slots in the bag
     for slot = 1, GetContainerNumSlots(bagID) do

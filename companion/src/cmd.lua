@@ -17,8 +17,8 @@ function JeevesAddon:ParseCmd(input)
         return JeevesAddon:ExportCmd()
     end
 
-    if input == "unregister" then
-        return JeevesAddon:Unregister()
+    if input == "reset" then
+        return JeevesAddon:Reset()
     end
 
     -- we did not recognize the command
@@ -41,7 +41,8 @@ function JeevesAddon:ExportCmd()
     local depositCommands, totalDeposits = buildCommands("!deposit ", deposits)
     local withdrawlCommands, totalWithdrawls = buildCommands("!withdraw ", withdrawls)
 
-    local totalCommands = table.getn(depositCommands) + table.getn(withdrawlCommands)
+    -- compute the total number of commands we're gonna have to run
+    local totalCommands = getn(depositCommands) + getn(withdrawlCommands)
 
     if totalCommands == 0 then
         print("Sorry, there are no items to export.")
@@ -107,13 +108,24 @@ function JeevesAddon:ExportCmd()
     end
 
     -- save this as the latest export for the player
-    LatestExports[UnitGUID("player")] = CurrentInventory()
+    LatestExports[UnitGUID("player")] = {}
+
+    for key, value in pairs(CurrentInventory()) do
+        LatestExports[UnitGUID("player")][key] = value
+    end
+    -- shallowcopy(CurrentInventory())
 end
 
-function JeevesAddon:Unregister()
-    if CachedBank() ~= nil then
+function JeevesAddon:Reset()
+    -- clear the cached bank if it exists
+    if CachedBank() ~= nil and getn(CachedBank()) > 0 then
         ResetCachedBank()
     end
+    -- make sure we clear any export history
+    LatestExports[UnitGUID("player")] = {}
+
+    -- tell them we're done
+    print("Successfully reset your bank data")
 end
 
 function computeExports(latestExport, currentInventory)
