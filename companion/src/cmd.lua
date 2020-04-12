@@ -25,6 +25,7 @@ end
 function JeevesAddon:RootCmd()
     print(JeevesAddonTitle)
     print("|cFF80FF80/jeeves export|r - |cFFFF8080export the changes your inventories|r")
+    print("|cFF80FF80/jeeves reset|r - |cFFFF8080reset your tracked inventories|r")
 end
 
 -- the command to export the delta between the last known inventory for this
