@@ -69,7 +69,7 @@ func TestParseTransaction(t *testing.T) {
 
 	for _, row := range table {
 		t.Run(row.Entry, func(t *testing.T) {
-			tx, err := bot.ParseTransaction(row.Entry)
+			tx, err := bot.ParseTransactions(row.Entry)
 			if !assert.Nil(t, err) {
 				return
 			}

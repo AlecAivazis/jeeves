@@ -61,6 +61,8 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 		} else {
 			done, err = b.RequestItems(ctx, ParseItems(words[1]))
 		}
+	case CommandResetBank:
+		err = b.ResetBank(ctx)
 	case CommandRefreshBank:
 		err = b.UpdateBankListing(ctx)
 	default:

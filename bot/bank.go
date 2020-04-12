@@ -26,12 +26,14 @@ const (
 	CommandDeposit = "deposit"
 	// CommandWithdraw defines the command used to withdraw items from the guild bank
 	CommandWithdraw = "withdraw"
+	// CommandRequest can be used to submit a request to be fulfilled by a banker
+	CommandRequest = "request"
 	// CommandAssignBankChannel defines the command used to assign a channel to use to display the bank
 	CommandAssignBankChannel = "jeeves-assign-bank"
 	// CommandRefreshBank can be used to force the bank to be re-rendered
 	CommandRefreshBank = "refresh-bank"
-	// CommandRequest can be used to submit a request to be fulfilled by a banker
-	CommandRequest = "request"
+	// CommandResetBank can be  used to reset the banks current inventory
+	CommandResetBank = "reset-bank"
 )
 
 const (
@@ -337,6 +339,9 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 		return false, err
 	}
 
+	// confirm that we see the withdraw
+	b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👀")
+
 	// notify all of the bankers that there is a request
 
 	// the message to send
@@ -365,10 +370,11 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 		}
 	}
 
-	// confirm that we see the withdraw
-	b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👀")
-
 	return false, nil
+}
+
+func (b *JeevesBot) ResetBank(ctx *CommandContext) error {
+	return nil
 }
 
 func (b *JeevesBot) ValidateWithdraw(ctx *CommandContext, items []string) error {
