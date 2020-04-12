@@ -7,7 +7,7 @@ local DiscordMessageLimit = 2000
 function JeevesAddon:ExportCmd()
     -- we have to compute the total transactions to go from what we
     -- last had to what we have now
-    local deposits, withdrawls = computeExports(LatestExports[UnitGUID("player")], CurrentInventory())
+    local deposits, withdrawls = computeExports(LatestExports[UnitGUID("player")], currentInventory())
     -- get the list of commands corresponding to each
     local depositCommands, totalDeposits = buildCommands("!deposit ", deposits)
     local withdrawlCommands, totalWithdrawls = buildCommands("!withdraw ", withdrawls)
@@ -23,8 +23,9 @@ function JeevesAddon:ExportCmd()
     -- we need to create a frame with the command
     local commandFrame = AceGUI:Create("Frame");
     commandFrame:SetWidth(500)
-    commandFrame:SetHeight(100 * (totalCommands + 0.5) )
+    commandFrame:SetHeight(100 * (totalCommands + 1) )
     commandFrame:SetTitle("Inventory Export")
+    commandFrame:SetStatusText(JeevesAddonTitle)
     commandFrame:EnableResize(false)
 
     local spacer = AceGUI:Create("Label")
@@ -33,7 +34,7 @@ function JeevesAddon:ExportCmd()
     commandFrame:AddChild(spacer)
 
     -- add some text to the frame to tell the user what they are looking at
-    local text  = AceGUI:Create("Label")
+    local text = AceGUI:Create("Label")
     text:SetFullWidth(true)
     text:SetFontObject(GameFontHighlight)
     commandFrame:AddChild(text)
@@ -78,8 +79,14 @@ function JeevesAddon:ExportCmd()
         commandFrame:AddChild(editBox)
     end
 
-    -- remember what we just exported
-    updateLatestExport()
+    -- add the button to confirm the export
+    local button = AceGUI:Create("Button")
+    button:SetText("Confirm")
+    button:SetCallback("OnClick", function()
+        updateLatestExport()
+        commandFrame:Hide()
+    end)
+    commandFrame:AddChild(button)
 end
 
 -- computeExports computes the operations that update the bank (assumed to be at the state
@@ -173,7 +180,7 @@ end
 function updateLatestExport()
     -- save this as the latest export for the player
     LatestExports[UnitGUID("player")] = {}
-    for key, value in pairs(CurrentInventory()) do
+    for key, value in pairs(currentInventory()) do
         LatestExports[UnitGUID("player")][key] = value
     end
 end

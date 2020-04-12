@@ -23,7 +23,7 @@ end
 
 -- a command with no inputs
 function JeevesAddon:RootCmd()
-    print("Jeeves Companion v0.0.0")
+    print(JeevesAddonTitle)
     print("|cFF80FF80/jeeves export|r - |cFFFF8080export the changes your inventories|r")
 end
 

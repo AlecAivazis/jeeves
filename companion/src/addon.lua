@@ -1,6 +1,8 @@
 -- addon definition
 JeevesAddon = LibStub("AceAddon-3.0"):NewAddon("Jeeves", "AceConsole-3.0")
 
+JeevesAddonTitle = "Jeeves Companion v0.0.0"
+
 -- invoked by ace when the addon is enabled
 function JeevesAddon:OnEnable()
     -- register slash commands

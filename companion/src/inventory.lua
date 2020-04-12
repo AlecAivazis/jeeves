@@ -31,13 +31,13 @@ function saveBag(bagID, target)
     end
 end
 
-function CurrentInventory()
+function currentInventory()
     -- lets build up a table of the players inventory
     local inventory = {}
 
     -- if there is a cached bank
     if cachedBank() ~= nil then
-        for itemID, count in pairs(CachedBank()) do
+        for itemID, count in pairs(cachedBank()) do
             inventory[itemID] = count
         end
     end
