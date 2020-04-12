@@ -392,8 +392,16 @@ func (b *JeevesBot) ResetBank(ctx *CommandContext) error {
 		return err
 	}
 
+	// reset the currency of the guild bank
+	guildBank, err := b.GuildBank(ctx)
+	if err != nil {
+		return err
+	}
+	// zero out the guild balance
+	guildBank.Update().AddBalance(-guildBank.Balance).Exec(ctx)
+
 	// nothing went wrong
-	return nil
+	return b.UpdateBankListing(ctx)
 }
 
 func (b *JeevesBot) ValidateWithdraw(ctx *CommandContext, items []string) error {
