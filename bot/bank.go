@@ -507,7 +507,6 @@ func (b *JeevesBot) userCanModifyBank(ctx *CommandContext, member *discordgo.Mem
 
 // ParseTransaction takes a string like "2xLava Core" and extracts the quantity and item referenced
 func parseTransaction(entry string) (Transaction, error) {
-	fmt.Println("Before")
 	// get the name ready and normalized
 	item := strings.ToLower(strings.Trim(entry, " "))
 
@@ -693,9 +692,13 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	if err != nil {
 		return err
 	}
-
+	messageIDs := []string{}
 	for _, msg := range messages {
-		b.Discord.ChannelMessageDelete(bank.ChannelID, msg.ID)
+		messageIDs = append(messageIDs, msg.ID)
+	}
+	err = b.Discord.ChannelMessagesBulkDelete(bank.ChannelID, messageIDs)
+	if err != nil {
+		fmt.Println("err", err)
 	}
 
 	// we need to break the message we are about to send in 2000 character chunks.
