@@ -704,6 +704,30 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 
 	// we need to break the message we are about to send in 2000 character chunks.
 	messagesToSend := []string{}
+	lines := strings.Split(contents.String(), "\n")
+	currentMessage := ""
+
+	for _, line := range lines {
+		// if the line wouldn't push the message over the limit, we can just add it to the list
+		if len(currentMessage)+len(line)+1 < 2000 {
+			currentMessage += line + "\n"
+			continue
+		}
+
+		// this message would push the current over the list
+		messagesToSend = append(messagesToSend, currentMessage)
+
+		// start with this line
+		currentMessage = line + "\n"
+	}
+
+	// send each message to the bank
+	for _, msg := range messagesToSend {
+		_, err := b.Discord.ChannelMessageSend(bank.ChannelID, msg)
+		if err != nil {
+			return err
+		}
+	}
 
 	// nothing went wrong
 	return nil
