@@ -723,6 +723,7 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 
 	// send each message to the bank
 	for _, msg := range messagesToSend {
+		fmt.Println(msg)
 		_, err := b.Discord.ChannelMessageSend(bank.ChannelID, msg)
 		if err != nil {
 			return err
