@@ -3,6 +3,7 @@ local frame, events = CreateFrame("Frame"), {};
 
 function events:BANKFRAME_OPENED(...)
     -- reset the cached inventory
+<<<<<<< HEAD
     ResetCachedBank()
 
     -- export the bank container
@@ -10,6 +11,15 @@ function events:BANKFRAME_OPENED(...)
     -- export every bank slot
     for slot = NUM_BAG_SLOTS+1, NUM_BAG_SLOTS+NUM_BANKBAGSLOTS do
         saveBag(slot, CachedBank())
+=======
+    resetCachedBank()
+
+    -- export the bank container
+    saveBag(BANK_CONTAINER, cachedBank())
+    -- export every bank slot
+    for slot = NUM_BAG_SLOTS+1, NUM_BAG_SLOTS+NUM_BANKBAGSLOTS do
+        saveBag(slot, cachedBank())
+>>>>>>> origin/addon
     end
 end
 
@@ -31,6 +41,7 @@ function saveBag(bagID, target)
     end
 end
 
+<<<<<<< HEAD
 function CurrentInventory()
     -- lets build up a table of the players inventory
     local inventory = {}
@@ -39,10 +50,28 @@ function CurrentInventory()
         inventory[itemID] = count
     end
 
+=======
+function currentInventory()
+    -- lets build up a table of the players inventory
+    local inventory = {}
+
+    -- if there is a cached bank
+    if cachedBank() ~= nil then
+        for itemID, count in pairs(cachedBank()) do
+            inventory[itemID] = count
+        end
+    end
+
+    -- include every bag the character has
+>>>>>>> origin/addon
     for slot = 0, NUM_BAG_SLOTS do
         saveBag(slot, inventory)
     end
 
+<<<<<<< HEAD
+=======
+    -- we're done
+>>>>>>> origin/addon
     return inventory
 end
 

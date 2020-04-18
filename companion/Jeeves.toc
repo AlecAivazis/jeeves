@@ -5,12 +5,20 @@
 ## Version: 0.0.0
 ## OptionalDeps: Ace3
 
+<<<<<<< HEAD
 ## SavedVariables: CharacterInventories
+=======
+## SavedVariables: CharacterInventories, LatestExports
+>>>>>>> origin/addon
 
 embeds.xml
 
 src\addon.lua
 src\inventory.lua
 src\utils.lua
+<<<<<<< HEAD
+=======
+src\export.lua
+>>>>>>> origin/addon
 
 src\cmd.lua
