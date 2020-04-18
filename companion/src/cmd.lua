@@ -24,8 +24,8 @@ end
 -- a command with no inputs
 function JeevesAddon:RootCmd()
     print(JeevesAddonTitle)
-    print("|cFF80FF80/jeeves export|r - |cFFFF8080export the changes your inventories|r")
-    print("|cFF80FF80/jeeves reset|r - |cFFFF8080reset your tracked inventories|r")
+    print("|cFF80FF80/jeeves export|r - |cFFFF8080export the changes your inventoryr")
+    print("|cFF80FF80/jeeves reset|r - |cFFFF8080reset your tracked inventory|r")
 end
 
 -- the command to export the delta between the last known inventory for this
