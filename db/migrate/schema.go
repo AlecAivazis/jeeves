@@ -48,7 +48,6 @@ var (
 	GuildBanksColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "channel_id", Type: field.TypeString},
-		{Name: "display_message_id", Type: field.TypeString, Unique: true},
 		{Name: "balance", Type: field.TypeInt, Default: guildbank.DefaultBalance},
 		{Name: "guild_id", Type: field.TypeInt, Unique: true, Nullable: true},
 	}
@@ -60,7 +59,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:  "guild_banks_guilds_bank",
-				Columns: []*schema.Column{GuildBanksColumns[4]},
+				Columns: []*schema.Column{GuildBanksColumns[3]},
 
 				RefColumns: []*schema.Column{GuildsColumns[0]},
 				OnDelete:   schema.SetNull,

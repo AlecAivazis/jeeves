@@ -110,9 +110,8 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 	}
 
 	// send the display message now so they know what they can delete
-	display, err := b.Reply(ctx, "All set! Your guild bank's contents will go here. You are free to"+
-		" delete any other message in this channel but please do not delete this message. I will update it as your bankers"+
-		" add items to the bank.")
+	_, err = b.Reply(ctx, "All set! Your guild bank's contents will go here. You are free to"+
+		" delete any message in this channel. I will update it as your bankers add items to the bank.")
 	if err != nil {
 		return false, err
 	}
@@ -142,7 +141,6 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 		_, err = b.Database.GuildBank.Create().
 			SetGuild(guild).
 			SetChannelID(ctx.ChannelID).
-			SetDisplayMessageID(display.ID).
 			Save(ctx)
 		if err != nil {
 			return false, err
@@ -153,7 +151,6 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 		_, err = b.Database.GuildBank.Update().
 			Where(wherePredicates...).
 			SetChannelID(ctx.ChannelID).
-			SetDisplayMessageID(display.ID).
 			Save(ctx)
 		if err != nil {
 			return false, err
@@ -258,8 +255,6 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, err
 			// we're done processing it
 			continue
 		}
-
-		fmt.Println(item, amount)
 
 		// does this bank have a record for the item
 		existingItems, err := guildBank.
@@ -512,7 +507,6 @@ func (b *JeevesBot) userCanModifyBank(ctx *CommandContext, member *discordgo.Mem
 
 // ParseTransaction takes a string like "2xLava Core" and extracts the quantity and item referenced
 func parseTransaction(entry string) (Transaction, error) {
-	fmt.Println("Before")
 	// get the name ready and normalized
 	item := strings.ToLower(strings.Trim(entry, " "))
 
@@ -692,10 +686,49 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	if err != nil {
 		return err
 	}
-	// update the display message with the items
-	_, err = b.Discord.ChannelMessageEdit(bank.ChannelID, bank.DisplayMessageID, contents.String())
+
+	// delete every message in the channel
+	messages, err := b.Discord.ChannelMessages(bank.ChannelID, 100, "", "", "")
 	if err != nil {
 		return err
+	}
+	messageIDs := []string{}
+	for _, msg := range messages {
+		messageIDs = append(messageIDs, msg.ID)
+	}
+	err = b.Discord.ChannelMessagesBulkDelete(bank.ChannelID, messageIDs)
+	if err != nil {
+		fmt.Println("err", err)
+	}
+
+	// we need to break the message we are about to send in 2000 character chunks.
+	messagesToSend := []string{}
+	lines := strings.Split(contents.String(), "\n")
+	currentMessage := ""
+
+	for _, line := range lines {
+		// if the line wouldn't push the message over the limit, we can just add it to the list
+		if len(currentMessage)+len(line)+1 < 2000 {
+			currentMessage += line + "\n"
+			continue
+		}
+
+		// this message would push the current over the list
+		messagesToSend = append(messagesToSend, currentMessage)
+
+		// start with this line
+		currentMessage = line + "\n"
+	}
+
+	// add the remaining message to the list
+	messagesToSend = append(messagesToSend, currentMessage)
+
+	// send each message to the bank
+	for _, msg := range messagesToSend {
+		_, err := b.Discord.ChannelMessageSend(bank.ChannelID, msg)
+		if err != nil {
+			return err
+		}
 	}
 
 	// nothing went wrong

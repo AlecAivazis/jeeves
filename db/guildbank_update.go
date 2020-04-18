@@ -17,15 +17,14 @@ import (
 // GuildBankUpdate is the builder for updating GuildBank entities.
 type GuildBankUpdate struct {
 	config
-	channelID        *string
-	displayMessageID *string
-	balance          *int
-	addbalance       *int
-	items            map[int]struct{}
-	guild            map[int]struct{}
-	removedItems     map[int]struct{}
-	clearedGuild     bool
-	predicates       []predicate.GuildBank
+	channelID    *string
+	balance      *int
+	addbalance   *int
+	items        map[int]struct{}
+	guild        map[int]struct{}
+	removedItems map[int]struct{}
+	clearedGuild bool
+	predicates   []predicate.GuildBank
 }
 
 // Where adds a new predicate for the builder.
@@ -37,12 +36,6 @@ func (gbu *GuildBankUpdate) Where(ps ...predicate.GuildBank) *GuildBankUpdate {
 // SetChannelID sets the channelID field.
 func (gbu *GuildBankUpdate) SetChannelID(s string) *GuildBankUpdate {
 	gbu.channelID = &s
-	return gbu
-}
-
-// SetDisplayMessageID sets the displayMessageID field.
-func (gbu *GuildBankUpdate) SetDisplayMessageID(s string) *GuildBankUpdate {
-	gbu.displayMessageID = &s
 	return gbu
 }
 
@@ -206,9 +199,6 @@ func (gbu *GuildBankUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value := gbu.channelID; value != nil {
 		updater.Set(guildbank.FieldChannelID, *value)
 	}
-	if value := gbu.displayMessageID; value != nil {
-		updater.Set(guildbank.FieldDisplayMessageID, *value)
-	}
 	if value := gbu.balance; value != nil {
 		updater.Set(guildbank.FieldBalance, *value)
 	}
@@ -294,26 +284,19 @@ func (gbu *GuildBankUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // GuildBankUpdateOne is the builder for updating a single GuildBank entity.
 type GuildBankUpdateOne struct {
 	config
-	id               int
-	channelID        *string
-	displayMessageID *string
-	balance          *int
-	addbalance       *int
-	items            map[int]struct{}
-	guild            map[int]struct{}
-	removedItems     map[int]struct{}
-	clearedGuild     bool
+	id           int
+	channelID    *string
+	balance      *int
+	addbalance   *int
+	items        map[int]struct{}
+	guild        map[int]struct{}
+	removedItems map[int]struct{}
+	clearedGuild bool
 }
 
 // SetChannelID sets the channelID field.
 func (gbuo *GuildBankUpdateOne) SetChannelID(s string) *GuildBankUpdateOne {
 	gbuo.channelID = &s
-	return gbuo
-}
-
-// SetDisplayMessageID sets the displayMessageID field.
-func (gbuo *GuildBankUpdateOne) SetDisplayMessageID(s string) *GuildBankUpdateOne {
-	gbuo.displayMessageID = &s
 	return gbuo
 }
 
@@ -480,10 +463,6 @@ func (gbuo *GuildBankUpdateOne) sqlSave(ctx context.Context) (gb *GuildBank, err
 	if value := gbuo.channelID; value != nil {
 		updater.Set(guildbank.FieldChannelID, *value)
 		gb.ChannelID = *value
-	}
-	if value := gbuo.displayMessageID; value != nil {
-		updater.Set(guildbank.FieldDisplayMessageID, *value)
-		gb.DisplayMessageID = *value
 	}
 	if value := gbuo.balance; value != nil {
 		updater.Set(guildbank.FieldBalance, *value)
