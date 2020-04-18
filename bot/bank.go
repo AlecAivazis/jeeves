@@ -259,6 +259,8 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, err
 			continue
 		}
 
+		fmt.Println(item, amount)
+
 		// does this bank have a record for the item
 		existingItems, err := guildBank.
 			QueryItems().
@@ -510,6 +512,7 @@ func (b *JeevesBot) userCanModifyBank(ctx *CommandContext, member *discordgo.Mem
 
 // ParseTransaction takes a string like "2xLava Core" and extracts the quantity and item referenced
 func parseTransaction(entry string) (Transaction, error) {
+	fmt.Println("Before")
 	// get the name ready and normalized
 	item := strings.ToLower(strings.Trim(entry, " "))
 
