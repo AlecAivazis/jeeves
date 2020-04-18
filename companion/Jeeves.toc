@@ -1,0 +1,16 @@
+## Interface: 11302
+## Title: Jeeves
+## Description: The companion application for the jeeves guild bot
+## Author: Alec Aivazis
+## Version: 0.0.0
+## OptionalDeps: Ace3
+
+## SavedVariables: CharacterInventories
+
+embeds.xml
+
+src\addon.lua
+src\inventory.lua
+src\utils.lua
+
+src\cmd.lua
