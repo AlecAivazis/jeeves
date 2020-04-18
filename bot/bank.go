@@ -110,9 +110,8 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 	}
 
 	// send the display message now so they know what they can delete
-	display, err := b.Reply(ctx, "All set! Your guild bank's contents will go here. You are free to"+
-		" delete any other message in this channel but please do not delete this message. I will update it as your bankers"+
-		" add items to the bank.")
+	_, err = b.Reply(ctx, "All set! Your guild bank's contents will go here. You are free to"+
+		" delete any message in this channel. I will update it as your bankers add items to the bank.")
 	if err != nil {
 		return false, err
 	}
@@ -142,7 +141,6 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 		_, err = b.Database.GuildBank.Create().
 			SetGuild(guild).
 			SetChannelID(ctx.ChannelID).
-			SetDisplayMessageID(display.ID).
 			Save(ctx)
 		if err != nil {
 			return false, err
@@ -153,7 +151,6 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 		_, err = b.Database.GuildBank.Update().
 			Where(wherePredicates...).
 			SetChannelID(ctx.ChannelID).
-			SetDisplayMessageID(display.ID).
 			Save(ctx)
 		if err != nil {
 			return false, err
@@ -692,11 +689,21 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	if err != nil {
 		return err
 	}
-	// update the display message with the items
-	_, err = b.Discord.ChannelMessageEdit(bank.ChannelID, bank.DisplayMessageID, contents.String())
+
+	// delete every message in the channel
+	messages, err := b.Discord.ChannelMessages(bank.ChannelID, 1000, "", "", "")
 	if err != nil {
 		return err
 	}
+	for _, msg := range messages {
+		err = b.Discord.ChannelMessageDelete(bank.ChannelID, msg.ID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// we need to break the message we are about to send in 2000 character chunks.
+	messagesToSend := []string{}
 
 	// nothing went wrong
 	return nil
