@@ -256,8 +256,6 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, err
 			continue
 		}
 
-		fmt.Println(item, amount)
-
 		// does this bank have a record for the item
 		existingItems, err := guildBank.
 			QueryItems().
@@ -695,11 +693,9 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	if err != nil {
 		return err
 	}
+
 	for _, msg := range messages {
-		err = b.Discord.ChannelMessageDelete(bank.ChannelID, msg.ID)
-		if err != nil {
-			return err
-		}
+		b.Discord.ChannelMessageDelete(bank.ChannelID, msg.ID)
 	}
 
 	// we need to break the message we are about to send in 2000 character chunks.
@@ -721,9 +717,11 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 		currentMessage = line + "\n"
 	}
 
+	// add the remaining message to the list
+	messagesToSend = append(messagesToSend, currentMessage)
+
 	// send each message to the bank
 	for _, msg := range messagesToSend {
-		fmt.Println(msg)
 		_, err := b.Discord.ChannelMessageSend(bank.ChannelID, msg)
 		if err != nil {
 			return err
