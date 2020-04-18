@@ -691,7 +691,7 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	}
 
 	// delete every message in the channel
-	messages, err := b.Discord.ChannelMessages(bank.ChannelID, 1000, "", "", "")
+	messages, err := b.Discord.ChannelMessages(bank.ChannelID, 100, "", "", "")
 	if err != nil {
 		return err
 	}
