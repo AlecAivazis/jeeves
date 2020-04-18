@@ -13,8 +13,6 @@ const (
 	FieldID = "id"
 	// FieldChannelID holds the string denoting the channelid vertex property in the database.
 	FieldChannelID = "channel_id"
-	// FieldDisplayMessageID holds the string denoting the displaymessageid vertex property in the database.
-	FieldDisplayMessageID = "display_message_id"
 	// FieldBalance holds the string denoting the balance vertex property in the database.
 	FieldBalance = "balance"
 
@@ -40,7 +38,6 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldChannelID,
-	FieldDisplayMessageID,
 	FieldBalance,
 }
 
@@ -48,7 +45,7 @@ var (
 	fields = schema.GuildBank{}.Fields()
 
 	// descBalance is the schema descriptor for balance field.
-	descBalance = fields[2].Descriptor()
+	descBalance = fields[1].Descriptor()
 	// DefaultBalance holds the default value on creation for the balance field.
 	DefaultBalance = descBalance.Default.(int)
 )

@@ -15,22 +15,15 @@ import (
 // GuildBankCreate is the builder for creating a GuildBank entity.
 type GuildBankCreate struct {
 	config
-	channelID        *string
-	displayMessageID *string
-	balance          *int
-	items            map[int]struct{}
-	guild            map[int]struct{}
+	channelID *string
+	balance   *int
+	items     map[int]struct{}
+	guild     map[int]struct{}
 }
 
 // SetChannelID sets the channelID field.
 func (gbc *GuildBankCreate) SetChannelID(s string) *GuildBankCreate {
 	gbc.channelID = &s
-	return gbc
-}
-
-// SetDisplayMessageID sets the displayMessageID field.
-func (gbc *GuildBankCreate) SetDisplayMessageID(s string) *GuildBankCreate {
-	gbc.displayMessageID = &s
 	return gbc
 }
 
@@ -95,9 +88,6 @@ func (gbc *GuildBankCreate) Save(ctx context.Context) (*GuildBank, error) {
 	if gbc.channelID == nil {
 		return nil, errors.New("db: missing required field \"channelID\"")
 	}
-	if gbc.displayMessageID == nil {
-		return nil, errors.New("db: missing required field \"displayMessageID\"")
-	}
 	if gbc.balance == nil {
 		v := guildbank.DefaultBalance
 		gbc.balance = &v
@@ -131,10 +121,6 @@ func (gbc *GuildBankCreate) sqlSave(ctx context.Context) (*GuildBank, error) {
 	if value := gbc.channelID; value != nil {
 		insert.Set(guildbank.FieldChannelID, *value)
 		gb.ChannelID = *value
-	}
-	if value := gbc.displayMessageID; value != nil {
-		insert.Set(guildbank.FieldDisplayMessageID, *value)
-		gb.DisplayMessageID = *value
 	}
 	if value := gbc.balance; value != nil {
 		insert.Set(guildbank.FieldBalance, *value)
