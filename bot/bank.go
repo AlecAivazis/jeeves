@@ -707,6 +707,9 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	currentMessage := ""
 
 	for _, line := range lines {
+		// scrub the line for any weirdness
+		actualLine := scrubLine(line)
+
 		// if the line wouldn't push the message over the limit, we can just add it to the list
 		if len(currentMessage)+len(line)+1 < 2000 {
 			currentMessage += line + "\n"
@@ -733,6 +736,10 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 
 	// nothing went wrong
 	return nil
+}
+
+func scrubLine(line string) string {
+	return strings.ReplaceAll(line, "&#39;", "'")
 }
 
 var displayTemplate *template.Template

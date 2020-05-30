@@ -11,7 +11,7 @@ import (
 var BotToken string
 
 // DB configuration
-var DBHost = "localhost"
+var DBHost = "0.0.0.0"
 var DBName = "prisma"
 var DBPort = "5432"
 var DBUser = "prisma"
