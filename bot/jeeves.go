@@ -5,9 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 
@@ -74,28 +71,6 @@ func (b *JeevesBot) Start() error {
 		return errors.New("error opening connection: " + err.Error())
 	}
 
-	// after we are running
-	defer func() {
-		// if we aren't running because of a panic
-		if r := recover(); r != nil {
-			// keep the bot running
-			if err := b.Start(); err != nil {
-				fmt.Println(err)
-				b.Stop()
-			}
-
-		} else {
-			// we stopped naturally so make sure the server cleans up
-			b.Stop()
-		}
-
-	}()
-
-	// wait for some kind of signal to stop
-	fmt.Println("Jeeves is now running. Press ctrl+c to exit")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
 	return nil
 }
 
@@ -120,18 +95,20 @@ func (b *JeevesBot) ReportError(channel string, errorToReport error) (err error)
 }
 
 // NewGuild is invoked when a guild is registered with the bot
-func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate) error {
+func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate) {
 	// only register guilds we have access to
 	if event.Guild.Unavailable {
-		return errors.New("that guild is unavailable")
+		fmt.Println("that guild is unavailable")
+		return
 	}
 
 	// add an entry in the database for the new guild
 	_, err := b.Database.Guild.Create().
 		SetDiscordID(event.Guild.ID).
 		Save(context.Background())
-
-	return err
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 // Reply sends a message to the channel in the given context
