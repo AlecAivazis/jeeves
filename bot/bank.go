@@ -616,7 +616,7 @@ func (b *JeevesBot) Bankers(ctx *CommandContext) ([]*discordgo.Member, error) {
 	}
 
 	// we should keep looking
-	for true {
+	for {
 		// get the next 1000
 		nextPage, err := b.Discord.GuildMembers(ctx.GuildID, members[len(members)-1].User.ID, 1000)
 		if err != nil {
@@ -707,9 +707,6 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 	currentMessage := ""
 
 	for _, line := range lines {
-		// scrub the line for any weirdness
-		actualLine := scrubLine(line)
-
 		// if the line wouldn't push the message over the limit, we can just add it to the list
 		if len(currentMessage)+len(line)+1 < 2000 {
 			currentMessage += line + "\n"
@@ -736,10 +733,6 @@ func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
 
 	// nothing went wrong
 	return nil
-}
-
-func scrubLine(line string) string {
-	return strings.ReplaceAll(line, "&#39;", "'")
 }
 
 var displayTemplate *template.Template
