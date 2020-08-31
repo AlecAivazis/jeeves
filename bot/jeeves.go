@@ -28,33 +28,22 @@ type Message struct {
 type ReactionCallback func(*discordgo.MessageReactionAdd)
 
 func New() (*JeevesBot, error) {
+	return &JeevesBot{}, nil
+}
+
+func (b *JeevesBot) Start() error {
 	// if there is no token
 	if config.BotToken == "" {
 		// don't continue
-		return nil, errors.New("Please provide a token via the TOKEN environment variable")
+		return errors.New("Please provide a token via the TOKEN environment variable")
 	}
 
 	// create a new Discord session using the provided bot token
 	dg, err := discordgo.New("Bot " + config.BotToken)
 	if err != nil {
-		return nil, errors.New("Error creating Discord session: " + err.Error())
+		return errors.New("Error creating Discord session: " + err.Error())
 	}
 
-	// instantiate the bot
-	bot := &JeevesBot{
-		Discord: dg,
-	}
-
-	// add the various handlers
-	dg.AddHandler(bot.NewGuild)
-	dg.AddHandler(bot.CommandHandler)
-
-	return &JeevesBot{
-		Discord: dg,
-	}, nil
-}
-
-func (b *JeevesBot) Start() error {
 	// open up a client with the configured values
 	client, err := db.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.DBHost,
@@ -66,8 +55,16 @@ func (b *JeevesBot) Start() error {
 	if err != nil {
 		panic(err)
 	}
-	// save the reference to the client in the bot
-	b.Database = client
+
+	// instantiate the bot
+	bot := &JeevesBot{
+		Discord:  dg,
+		Database: client,
+	}
+
+	// add the various handlers
+	dg.AddHandler(bot.NewGuild)
+	dg.AddHandler(bot.CommandHandler)
 
 	// make sure the schema is up to date
 	if err := client.Schema.Create(context.Background()); err != nil {
