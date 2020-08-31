@@ -108,16 +108,18 @@ func (b *JeevesBot) ReportError(channel string, errorToReport error) (err error)
 }
 
 // NewGuild is invoked when a guild is registered with the bot
-func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate) {
+func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate) error {
 	// only register guilds we have access to
 	if event.Guild.Unavailable {
 		return
 	}
 
 	// add an entry in the database for the new guild
-	b.Database.Guild.Create().
+	_, err := b.Database.Guild.Create().
 		SetDiscordID(event.Guild.ID).
 		Save(context.Background())
+
+	return err
 }
 
 // Reply sends a message to the channel in the given context
