@@ -12,6 +12,7 @@ import (
 func main() {
 	// if we are not running locally
 	if !config.LocalMode {
+		fmt.Println("loading secrets")
 		// load secrets from google
 		if err := config.LoadSecrets(); err != nil {
 			fmt.Println(err)
