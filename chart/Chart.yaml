@@ -1,5 +1,0 @@
-name: jeeves
-description: The backing service for the jeeves discord bot
-apiVersion: v1
-appVersion: "1.0"
-version: 0.0.1
