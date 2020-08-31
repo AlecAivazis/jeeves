@@ -14,15 +14,6 @@ import (
 )
 
 func Start() {
-	// if we are not running locally
-	if !config.LocalMode {
-		// load secrets from google
-		if err := config.LoadSecrets(); err != nil {
-			fmt.Println(err)
-			return
-		}
-	}
-
 	// if there is no token
 	if config.BotToken == "" {
 		// tell the user what happened
