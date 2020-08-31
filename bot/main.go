@@ -8,13 +8,23 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/AlecAivazis/jeeves/config"
 	"github.com/AlecAivazis/jeeves/db"
 	"github.com/bwmarrin/discordgo"
 )
 
 func Start() {
+	// if we are not running locally
+	if !config.LocalMode {
+		// load secrets from google
+		if err := config.LoadSecrets(); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+
 	// if there is no token
-	if BotToken == "" {
+	if config.BotToken == "" {
 		// tell the user what happened
 		fmt.Println("Please provide a token via the TOKEN environment variable")
 		// don't continue
@@ -23,7 +33,7 @@ func Start() {
 	}
 
 	// create a new Discord session using the provided bot token
-	dg, err := discordgo.New("Bot " + BotToken)
+	dg, err := discordgo.New("Bot " + config.BotToken)
 	if err != nil {
 		fmt.Println("Error creating Discord session: ", err)
 		return
@@ -32,7 +42,13 @@ func Start() {
 	defer dg.Close()
 
 	// open up a client with the configured values
-	client, err := db.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", DBHost, DBPort, DBUser, DBPassword, DBName))
+	client, err := db.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		config.DBHost,
+		config.DBPort,
+		config.DBUser,
+		config.DBPassword,
+		config.DBName,
+	))
 	if err != nil {
 		panic(err)
 	}
@@ -65,6 +81,6 @@ func Start() {
 	// wait for some kind of signal to stop
 	fmt.Println("Jeeves is now running. Press ctrl+c to exit")
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, syscall.SIGTERM)
 	<-sc
 }
