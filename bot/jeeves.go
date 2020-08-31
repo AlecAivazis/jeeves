@@ -44,6 +44,10 @@ func (b *JeevesBot) Start() error {
 		return errors.New("Error creating Discord session: " + err.Error())
 	}
 
+	// add the various handlers
+	dg.AddHandler(b.NewGuild)
+	dg.AddHandler(b.CommandHandler)
+
 	// open up a client with the configured values
 	client, err := db.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.DBHost,
@@ -56,15 +60,9 @@ func (b *JeevesBot) Start() error {
 		panic(err)
 	}
 
-	// instantiate the bot
-	bot := &JeevesBot{
-		Discord:  dg,
-		Database: client,
-	}
-
-	// add the various handlers
-	dg.AddHandler(bot.NewGuild)
-	dg.AddHandler(bot.CommandHandler)
+	// hold onto the references to our clients
+	b.Discord = dg
+	b.Database = client
 
 	// make sure the schema is up to date
 	if err := client.Schema.Create(context.Background()); err != nil {
