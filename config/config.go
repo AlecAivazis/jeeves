@@ -16,6 +16,9 @@ var LocalMode = false
 // GoogleCloudProject points the google secrets manager to the right home
 var GoogleCloudProject = "aivazis"
 
+// StatusCheckPort
+var StatusCheckPort = "8080"
+
 // DB configuration
 var DBHost = "0.0.0.0"
 var DBName = "jeeves"
@@ -52,5 +55,9 @@ func init() {
 	}
 	if t := os.Getenv("DB_USER"); t != "" {
 		DBUser = t
+	}
+
+	if t := os.Getenv("PORT"); t != "" {
+		StatusCheckPort = t
 	}
 }

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/AlecAivazis/jeeves/config"
 	"github.com/AlecAivazis/jeeves/db"
@@ -68,10 +66,4 @@ func Start() {
 		fmt.Println("error opening connection,", err)
 		return
 	}
-
-	// wait for some kind of signal to stop
-	fmt.Println("Jeeves is now running. Press ctrl+c to exit")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, syscall.SIGTERM)
-	<-sc
 }
