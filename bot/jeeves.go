@@ -10,6 +10,7 @@ import (
 
 	"github.com/AlecAivazis/jeeves/config"
 	"github.com/AlecAivazis/jeeves/db"
+	"github.com/AlecAivazis/jeeves/db/guild"
 )
 
 // JeevesBot provides context for the discord handlers
@@ -102,13 +103,26 @@ func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate)
 		return
 	}
 
-	// add an entry in the database for the new guild
-	_, err := b.Database.Guild.Create().
-		SetDiscordID(event.Guild.ID).
-		Save(context.Background())
+	// have we recorded this guild before?
+	exists, err := b.Database.Guild.Query().
+		Where(guild.DiscordID(event.Guild.ID)).
+		Exist(context.Background())
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("error checking if we have seen guild before: " + err.Error())
+		return
 	}
+
+	// if we're never seen the guild before
+	if !exists {
+		// add an entry in the database for the new guild
+		_, err := b.Database.Guild.Create().
+			SetDiscordID(event.Guild.ID).
+			Save(context.Background())
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
 }
 
 // Reply sends a message to the channel in the given context
