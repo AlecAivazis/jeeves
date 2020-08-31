@@ -26,5 +26,5 @@ func main() {
 	}()
 
 	// start the jeeves bot
-	bot.Start()
+	jeeves.Start()
 }

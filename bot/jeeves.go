@@ -17,9 +17,8 @@ import (
 
 // JeevesBot provides context for the discord handlers
 type JeevesBot struct {
-	Database          *db.Client
-	Discord           *discordgo.Session
-	ReactionCallbacks map[string][]ReactionCallback
+	Database *db.Client
+	Discord  *discordgo.Session
 }
 
 type Message struct {
@@ -41,6 +40,21 @@ func New() (*JeevesBot, error) {
 		return nil, errors.New("Error creating Discord session: " + err.Error())
 	}
 
+	// instantiate the bot
+	bot := &JeevesBot{
+		Discord: dg,
+	}
+
+	// add the various handlers
+	dg.AddHandler(bot.NewGuild)
+	dg.AddHandler(bot.CommandHandler)
+
+	return &JeevesBot{
+		Discord: dg,
+	}, nil
+}
+
+func (b *JeevesBot) Start() error {
 	// open up a client with the configured values
 	client, err := db.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.DBHost,
@@ -52,30 +66,14 @@ func New() (*JeevesBot, error) {
 	if err != nil {
 		panic(err)
 	}
+	// save the reference to the client in the bot
+	b.Database = client
 
 	// make sure the schema is up to date
 	if err := client.Schema.Create(context.Background()); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
 
-	// instantiate the bot
-	bot := &JeevesBot{
-		Database:          client,
-		Discord:           dg,
-		ReactionCallbacks: make(map[string][]ReactionCallback),
-	}
-
-	// add the various handlers
-	dg.AddHandler(bot.NewGuild)
-	dg.AddHandler(bot.CommandHandler)
-
-	return &JeevesBot{
-		Discord:  dg,
-		Database: client,
-	}, nil
-}
-
-func (b *JeevesBot) Start() error {
 	// Open a websocket connection to Discord and begin listening.
 	if err := b.Discord.Open(); err != nil {
 		return errors.New("error opening connection: " + err.Error())
