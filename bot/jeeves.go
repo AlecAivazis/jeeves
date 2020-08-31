@@ -111,7 +111,7 @@ func (b *JeevesBot) ReportError(channel string, errorToReport error) (err error)
 func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate) error {
 	// only register guilds we have access to
 	if event.Guild.Unavailable {
-		return
+		return errors.New("that guild is unavailable")
 	}
 
 	// add an entry in the database for the new guild
