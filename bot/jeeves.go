@@ -74,8 +74,22 @@ func (b *JeevesBot) Start() error {
 		return errors.New("error opening connection: " + err.Error())
 	}
 
-	// make sure the server cleans up
-	defer b.Stop()
+	// after we are running
+	defer func() {
+		// if we aren't running because of a panic
+		if r := recover(); r != nil {
+			// keep the bot running
+			if err := b.Start(); err != nil {
+				fmt.Println(err)
+				b.Stop()
+			}
+
+		} else {
+			// we stopped naturally so make sure the server cleans up
+			b.Stop()
+		}
+
+	}()
 
 	// wait for some kind of signal to stop
 	fmt.Println("Jeeves is now running. Press ctrl+c to exit")
