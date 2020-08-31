@@ -2,11 +2,16 @@ package bot
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"sync"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/bwmarrin/discordgo"
 
+	"github.com/AlecAivazis/jeeves/config"
 	"github.com/AlecAivazis/jeeves/db"
 )
 
@@ -15,7 +20,6 @@ type JeevesBot struct {
 	Database          *db.Client
 	Discord           *discordgo.Session
 	ReactionCallbacks map[string][]ReactionCallback
-	cbMutex           sync.Mutex
 }
 
 type Message struct {
@@ -23,6 +27,82 @@ type Message struct {
 }
 
 type ReactionCallback func(*discordgo.MessageReactionAdd)
+
+func New() (*JeevesBot, error) {
+	// if there is no token
+	if config.BotToken == "" {
+		// don't continue
+		return nil, errors.New("Please provide a token via the TOKEN environment variable")
+	}
+
+	// create a new Discord session using the provided bot token
+	dg, err := discordgo.New("Bot " + config.BotToken)
+	if err != nil {
+		return nil, errors.New("Error creating Discord session: " + err.Error())
+	}
+
+	// open up a client with the configured values
+	client, err := db.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		config.DBHost,
+		config.DBPort,
+		config.DBUser,
+		config.DBPassword,
+		config.DBName,
+	))
+	if err != nil {
+		panic(err)
+	}
+
+	// make sure the schema is up to date
+	if err := client.Schema.Create(context.Background()); err != nil {
+		log.Fatalf("failed creating schema resources: %v", err)
+	}
+
+	// instantiate the bot
+	bot := &JeevesBot{
+		Database:          client,
+		Discord:           dg,
+		ReactionCallbacks: make(map[string][]ReactionCallback),
+	}
+
+	// add the various handlers
+	dg.AddHandler(bot.NewGuild)
+	dg.AddHandler(bot.CommandHandler)
+
+	return &JeevesBot{
+		Discord:  dg,
+		Database: client,
+	}, nil
+}
+
+func (b *JeevesBot) Start() error {
+	// Open a websocket connection to Discord and begin listening.
+	if err := b.Discord.Open(); err != nil {
+		return errors.New("error opening connection: " + err.Error())
+	}
+
+	// make sure the server cleans up
+	defer b.Stop()
+
+	// wait for some kind of signal to stop
+	fmt.Println("Jeeves is now running. Press ctrl+c to exit")
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
+	return nil
+}
+
+func (b *JeevesBot) Stop() error {
+	if err := b.Database.Close(); err != nil {
+		fmt.Println(err)
+	}
+	// make sure we close the bot when we're done
+	if err := b.Discord.Close(); err != nil {
+		fmt.Println(err)
+	}
+
+	return nil
+}
 
 // ReportError sends the error to the specified channel
 func (b *JeevesBot) ReportError(channel string, errorToReport error) (err error) {
@@ -48,49 +128,6 @@ func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate)
 // Reply sends a message to the channel in the given context
 func (b *JeevesBot) Reply(ctx *CommandContext, message string) (*discordgo.Message, error) {
 	return b.Discord.ChannelMessageSend(ctx.ChannelID, message)
-}
-
-func (b *JeevesBot) ReactionHandler(session *discordgo.Session, message *discordgo.MessageReactionAdd) {
-	// if we have a callback for the message
-	if b.ReactionCallbacks[message.MessageID] == nil {
-		return
-	}
-
-	// invoke each of the callbacks with the reaction
-	for _, cb := range b.ReactionCallbacks[message.MessageID] {
-		cb(message)
-	}
-}
-
-func (b *JeevesBot) UnregisterMessageReactionCallback(message *Message) error {
-	// remove the message id from the dispatch map
-	b.cbMutex.Lock()
-	delete(b.ReactionCallbacks, message.ID)
-	b.cbMutex.Unlock()
-
-	// nothing went wrong
-	return nil
-}
-
-func (b *JeevesBot) RegisterMessageReactionCallback(message *Message, cb ReactionCallback) error {
-	fmt.Println("Registering callback for ", message.ID)
-
-	// ensure atomic access to the list of callbacks
-	b.cbMutex.Lock()
-
-	// if we dont have an registered callbacks for the message make sure there is a list to add to
-	if b.ReactionCallbacks[message.ID] == nil {
-		b.ReactionCallbacks[message.ID] = []ReactionCallback{}
-	}
-
-	// add the callback to the list
-	b.ReactionCallbacks[message.ID] = append(b.ReactionCallbacks[message.ID], cb)
-
-	// we're done modifying the callback list
-	b.cbMutex.Unlock()
-
-	// nothing went wrong
-	return nil
 }
 
 func (b *JeevesBot) MemberName(ctx *CommandContext, user *discordgo.User) string {

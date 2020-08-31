@@ -58,7 +58,6 @@ func Start() {
 	// add the various handlers
 	dg.AddHandler(bot.NewGuild)
 	dg.AddHandler(bot.CommandHandler)
-	dg.AddHandler(bot.ReactionHandler)
 
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()

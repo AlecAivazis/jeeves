@@ -301,41 +301,6 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 		return false, err
 	}
 
-	// listen for the indication that the banker sent the items
-	// that reaction can be any of the following: ☑️, ✔️, or ✅
-	err := ctx.Bot.RegisterMessageReactionCallback(ctx.Message, func(reaction *discordgo.MessageReactionAdd) {
-		// get the user object
-		member, err := b.Discord.State.Member(reaction.GuildID, reaction.UserID)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		// make sure the user has the right permissions
-		if err := b.userCanModifyBank(ctx, member); err != nil {
-			return
-		}
-
-		// if the reaction is one of the approved ones
-		if strings.Contains("☑️✔️✅", reaction.Emoji.APIName()) {
-			// perform the withdraw
-			_, err := b.WithdrawItems(ctx, items)
-			if err != nil {
-				b.ReportError(ctx.ChannelID, err)
-				return
-			}
-
-			// confirm that we performed the withdraw
-			b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👍")
-
-			// we don't need to listen for reactions to this message any more
-			ctx.Bot.UnregisterMessageReactionCallback(ctx.Message)
-		}
-	})
-	if err != nil {
-		return false, err
-	}
-
 	// confirm that we see the withdraw
 	b.Discord.MessageReactionAdd(ctx.ChannelID, ctx.Message.ID, "👀")
 
