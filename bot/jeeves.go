@@ -8,7 +8,6 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/AlecAivazis/jeeves/config"
 	"github.com/AlecAivazis/jeeves/db"
 	"github.com/AlecAivazis/jeeves/db/guild"
 )
@@ -31,13 +30,13 @@ func New() (*JeevesBot, error) {
 
 func (b *JeevesBot) Start() error {
 	// if there is no token
-	if config.BotToken == "" {
+	if BotToken == "" {
 		// don't continue
 		return errors.New("Please provide a token via the TOKEN environment variable")
 	}
 
 	// create a new Discord session using the provided bot token
-	dg, err := discordgo.New("Bot " + config.BotToken)
+	dg, err := discordgo.New("Bot " + BotToken)
 	if err != nil {
 		return errors.New("Error creating Discord session: " + err.Error())
 	}
@@ -48,11 +47,11 @@ func (b *JeevesBot) Start() error {
 
 	// open up a client with the configured values
 	client, err := db.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		config.DBHost,
-		config.DBPort,
-		config.DBUser,
-		config.DBPassword,
-		config.DBName,
+		DBHost,
+		DBPort,
+		DBUser,
+		DBPassword,
+		DBName,
 	))
 	if err != nil {
 		panic(err)

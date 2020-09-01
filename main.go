@@ -6,22 +6,11 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/jeeves/bot"
-	"github.com/AlecAivazis/jeeves/config"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	// if we aren't running locally
-	if !config.LocalMode {
-		// load config values from google secrets
-		if err := config.LoadSecrets(); err != nil {
-			fmt.Println(err)
-			return
-		}
-
-	}
-
 	// create an instance of jeeves we can run
 	jeeves, err := bot.New()
 	if err != nil {
@@ -53,7 +42,7 @@ func main() {
 
 	// make sure we have a status check for Cloud Run
 	http.HandleFunc("/", StatusCheck)
-	err = http.ListenAndServe(":"+config.StatusCheckPort, nil)
+	err = http.ListenAndServe(":"+bot.StatusCheckPort, nil)
 	if err != nil {
 		fmt.Println(err)
 	}
