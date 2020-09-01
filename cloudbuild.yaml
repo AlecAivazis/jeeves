@@ -1,0 +1,23 @@
+steps:
+    # build the production docker image
+    - name: 'gcr.io/cloud-builders/docker'
+      entrypoint: 'bash'
+      args:
+          ['-c', 'docker build -t gcr.io/aivazis/jeeves:$BUILD_ID --target production .']
+    # push the docker image up to the registry
+    - name: 'gcr.io/cloud-builders/docker'
+      args: ['push', 'gcr.io/aivazis/jeeves:$BUILD_ID']
+    # upgrade the chart pertaining to this service
+    - name: 'gcr.io/aivazis/helm'
+      args: [
+          'upgrade',
+          '--set', "image=gcr.io/aivazis/jeeves:$BUILD_ID",
+          'jeeves',
+          'chart/'
+      ]
+      env: [
+        'CLOUDSDK_COMPUTE_ZONE=us-central1-a',
+        'CLOUDSDK_CONTAINER_CLUSTER=aivazis',
+      ]
+
+images: ['gcr.io/aivazis/jeeves:$BUILD_ID']

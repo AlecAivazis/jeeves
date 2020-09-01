@@ -122,7 +122,6 @@ func (b *JeevesBot) NewGuild(s *discordgo.Session, event *discordgo.GuildCreate)
 			fmt.Println(err)
 		}
 	}
-
 }
 
 // Reply sends a message to the channel in the given context
