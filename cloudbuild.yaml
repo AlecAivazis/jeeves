@@ -14,7 +14,7 @@ steps:
   - name: "gcr.io/aivazis/helm"
     args:
       [
-        "apply",
+        "update",
         "--set",
         "image=gcr.io/aivazis/jeeves:$BUILD_ID",
         "jeeves",
