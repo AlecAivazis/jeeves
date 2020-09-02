@@ -2,24 +2,17 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
-
-	"github.com/AlecAivazis/jeeves/bot"
 
 	_ "github.com/lib/pq"
 )
 
 func main() {
 	// create an instance of jeeves we can run
-	jeeves, err := bot.New()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	jeeves := &JeevesBot{}
 
 	// start the jeeves bot
-	err = jeeves.Start()
+	err := jeeves.Start()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -39,16 +32,4 @@ func main() {
 			jeeves.Stop()
 		}
 	}()
-
-	// make sure we have a status check for Cloud Run
-	http.HandleFunc("/", StatusCheck)
-	err = http.ListenAndServe(":"+bot.StatusCheckPort, nil)
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-// StatusCheck is an http endpoint that we can use to make sure the bot is still running
-func StatusCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "OK")
 }
