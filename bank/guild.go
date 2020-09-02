@@ -8,7 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func (b *JeevesBot) CheckInventory(ctx *CommandContext, items []string) error {
+func (b *Banker) CheckInventory(ctx *CommandContext, items []string) error {
 	// before we can check item quantity, we should check for spelling mistakes
 	transactions, err := ParseTransactions(items)
 	if err != nil {
@@ -16,7 +16,7 @@ func (b *JeevesBot) CheckInventory(ctx *CommandContext, items []string) error {
 	}
 
 	// find the bank for this guild
-	guildBank, err := b.GuildBankFromContext(ctx)
+	guildBank, err := ctx.GuildBank()
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (b *JeevesBot) CheckInventory(ctx *CommandContext, items []string) error {
 }
 
 // userCanModifyBank returns an error if the user shouldn't be allowed to touch the bank
-func (b *JeevesBot) userCanModifyBank(ctx *CommandContext, member *discordgo.Member) error {
+func (b *Banker) userCanModifyBank(ctx *CommandContext, member *discordgo.Member) error {
 	// grab the id of the banker role
 	bankRoleID, err := b.BankerRoleID(ctx)
 	if err != nil {
@@ -83,7 +83,7 @@ func (b *JeevesBot) userCanModifyBank(ctx *CommandContext, member *discordgo.Mem
 }
 
 // BankerRoleID returns the id corresponding to the banker role in this guild.
-func (b *JeevesBot) BankerRoleID(ctx *CommandContext) (string, error) {
+func (b *Banker) BankerRoleID(ctx *CommandContext) (string, error) {
 	// look up the roles in the guild so we can compare role IDs
 	roles, err := b.Discord.GuildRoles(ctx.GuildID)
 	if err != nil {
@@ -108,7 +108,7 @@ func (b *JeevesBot) BankerRoleID(ctx *CommandContext) (string, error) {
 }
 
 // Bankers returns a list of all of the bankers in the guild
-func (b *JeevesBot) Bankers(ctx *CommandContext) ([]*discordgo.Member, error) {
+func (b *Banker) Bankers(ctx *CommandContext) ([]*discordgo.Member, error) {
 	// get the first list of members
 	members, err := b.Discord.GuildMembers(ctx.GuildID, "", 1000)
 	if err != nil {

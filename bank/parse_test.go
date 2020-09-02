@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/AlecAivazis/jeeves/bot"
+	"github.com/AlecAivazis/jeeves/bank"
 	"github.com/AlecAivazis/jeeves/data"
 )
 
@@ -15,53 +15,53 @@ func TestParseTransaction(t *testing.T) {
 	// the table
 	table := []struct {
 		Entry    string
-		Expected bot.Transaction
+		Expected bank.Transaction
 	}{
 		{
 			Entry: "2xLava Core",
-			Expected: bot.Transaction{
+			Expected: bank.Transaction{
 				Amount: 2,
 				Item:   lavaCoreID,
 			},
 		},
 		{
 			Entry: "2x Lava Core",
-			Expected: bot.Transaction{
+			Expected: bank.Transaction{
 				Amount: 2,
 				Item:   lavaCoreID,
 			},
 		},
 		{
 			Entry: " 2xLava Core",
-			Expected: bot.Transaction{
+			Expected: bank.Transaction{
 				Amount: 2,
 				Item:   lavaCoreID,
 			},
 		},
 		{
 			Entry: " 2x Lava Core",
-			Expected: bot.Transaction{
+			Expected: bank.Transaction{
 				Amount: 2,
 				Item:   lavaCoreID,
 			},
 		},
 		{
 			Entry: "2c",
-			Expected: bot.Transaction{
+			Expected: bank.Transaction{
 				Amount: 2,
 				Item:   data.ItemIDGold,
 			},
 		},
 		{
 			Entry: "2s",
-			Expected: bot.Transaction{
+			Expected: bank.Transaction{
 				Amount: 200,
 				Item:   data.ItemIDGold,
 			},
 		},
 		{
 			Entry: "2g",
-			Expected: bot.Transaction{
+			Expected: bank.Transaction{
 				Amount: 20000,
 				Item:   data.ItemIDGold,
 			},
@@ -70,7 +70,7 @@ func TestParseTransaction(t *testing.T) {
 
 	for _, row := range table {
 		t.Run(row.Entry, func(t *testing.T) {
-			tx, err := bot.ParseTransaction(row.Entry)
+			tx, err := bank.ParseTransaction(row.Entry)
 			if !assert.Nil(t, err) {
 				return
 			}

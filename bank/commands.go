@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/jeeves/data"
+	"github.com/AlecAivazis/jeeves/db"
 	"github.com/AlecAivazis/jeeves/db/bankitem"
 	"github.com/AlecAivazis/jeeves/db/guild"
 	"github.com/AlecAivazis/jeeves/db/guildbank"
@@ -20,17 +21,6 @@ import (
 const (
 	// RoleBanker defines the public name of the role to give non-admin users permissions to modify the bank
 	RoleBanker = "Banker"
-)
-
-const (
-	// QuantityDelimiter is the character that separates the amount from the item. Ie, "x" in 2xLava Core
-	QuantityDelimiter = 'x'
-	// CopperDelimiter is the character that designates a copper deposit
-	CopperDelimiter = "c"
-	// SilverDelimiter is the character that designates a silver deposit
-	SilverDelimiter = "s"
-	// GoldDelimiter is the character that designates a Gold deposit
-	GoldDelimiter = "g"
 )
 
 const (
@@ -49,7 +39,7 @@ const (
 )
 
 // CommandHandler handles the parsing and dispatching of commands for Jeeves
-func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordgo.MessageCreate) {
+func (b *Banker) CommandHandler(session *discordgo.Session, message *discordgo.MessageCreate) {
 	// only look at commands
 	if message.Content[0] != '!' {
 		return
@@ -61,11 +51,11 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 
 	// construct the context object
 	ctx := &CommandContext{
-		Bot:       b,
+		Banker:    b,
 		GuildID:   message.GuildID,
 		ChannelID: message.ChannelID,
 		Context:   context.Background(),
-		Message:   &Message{Message: *message.Message},
+		Message:   message.Message,
 	}
 
 	// split the items
@@ -105,7 +95,7 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 	// if the command failed
 	if err != nil {
 		// send the error to the channel we received the message on
-		b.ReportError(message.ChannelID, err)
+		b.Discord.ChannelMessageSend(message.ChannelID, "Sorry, "+err.Error())
 		return
 	}
 
@@ -114,15 +104,15 @@ func (b *JeevesBot) CommandHandler(session *discordgo.Session, message *discordg
 		// confirm the action with a reaction
 		err = b.Discord.MessageReactionAdd(message.ChannelID, message.ID, "👍")
 		if err != nil {
-			b.ReportError(message.ChannelID, err)
+			b.Discord.ChannelMessageSend(message.ChannelID, "Sorry, "+err.Error())
 		}
 	}
 }
 
 // InitializeBankChannel is called when the user intends to assign a channel for use to display the bank
-func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
+func (b *Banker) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 	// confirm the action with the user
-	_, err := b.Reply(ctx, "Okay! Please give me a moment to set up your guild bank...")
+	_, err := b.Discord.ChannelMessageSend(ctx.ChannelID, "Okay! Please give me a moment to set up your guild bank...")
 	if err != nil {
 		return false, err
 	}
@@ -142,7 +132,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 	// if we have to define the banker role now
 	if !definedBanker {
 		// tell the user about it
-		_, err = b.Reply(ctx, "I am creating the Banker role. Assign this to non-Admin users you want"+
+		_, err = b.Discord.ChannelMessageSend(ctx.ChannelID, "I am creating the Banker role. Assign this to non-Admin users you want"+
 			" to give permission to move items in and out of the bank.")
 		if err != nil {
 			return false, err
@@ -164,7 +154,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 			// if there was a problem, we still want to continue
 		} else {
 			// tell them what happened
-			b.Reply(ctx, "Hmmm something happened when I tried to do that. Maybe I don't have permissions to add roles?"+
+			b.Discord.ChannelMessageSend(ctx.ChannelID, "Hmmm something happened when I tried to do that. Maybe I don't have permissions to add roles?"+
 				" Before you try again, either make sure I have that permission or you can create the \"Banker\" role and I"+
 				" won't try to make it next time.")
 		}
@@ -172,7 +162,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 	}
 
 	// send the display message now so they know what they can delete
-	_, err = b.Reply(ctx, "All set! Your guild bank's contents will go here. You are free to"+
+	_, err = b.Discord.ChannelMessageSend(ctx.ChannelID, "All set! Your guild bank's contents will go here. You are free to"+
 		" delete any message in this channel. I will update it as your bankers add items to the bank.")
 	if err != nil {
 		return false, err
@@ -194,7 +184,7 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 	// if we have never recorded a bank for this guild
 	if len(previousRecord) == 0 {
 		// grab the guild from context
-		guild, err := b.GuildFromContext(ctx)
+		guild, err := ctx.Guild()
 		if err != nil {
 			return false, err
 		}
@@ -224,14 +214,14 @@ func (b *JeevesBot) InitializeBankChannel(ctx *CommandContext) (bool, error) {
 }
 
 // WithdrawItems is used when the user wants to withdraw the specified items from the bank. Will update the display message.
-func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, error) {
+func (b *Banker) WithdrawItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure the user has the right permissions
 	if err := b.CheckInventory(ctx, items); err != nil {
 		return false, err
 	}
 
 	// find the bank for this guild
-	guildBank, err := b.GuildBankFromContext(ctx)
+	guildBank, err := ctx.GuildBank()
 	if err != nil {
 		return false, err
 	}
@@ -286,14 +276,14 @@ func (b *JeevesBot) WithdrawItems(ctx *CommandContext, items []string) (bool, er
 }
 
 // DepositItems is used when the user wants to deposit the specified items into the bank. Will update the display message.
-func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, error) {
+func (b *Banker) DepositItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure the user has the right permissions
 	if err := b.userCanModifyBank(ctx, ctx.Message.Member); err != nil {
 		return false, err
 	}
 
 	// find the bank for this guild
-	guildBank, err := b.GuildBankFromContext(ctx)
+	guildBank, err := ctx.GuildBank()
 	if err != nil {
 		return false, err
 	}
@@ -358,7 +348,7 @@ func (b *JeevesBot) DepositItems(ctx *CommandContext, items []string) (bool, err
 }
 
 // RequestItems is called when a user wants something from the guild bank
-func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, error) {
+func (b *Banker) RequestItems(ctx *CommandContext, items []string) (bool, error) {
 	// make sure we would be able to perform the withdraw (ie, the item names are valid)
 	if err := b.CheckInventory(ctx, items); err != nil {
 		return false, err
@@ -372,7 +362,7 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 	// the message to send
 	message := fmt.Sprintf(
 		"Hey! It looks like %s wants to withdraw: %s",
-		b.MemberName(ctx, ctx.Message.Author),
+		ctx.MemberName(ctx.Message.Author),
 		strings.Join(items, ","),
 	)
 
@@ -399,7 +389,7 @@ func (b *JeevesBot) RequestItems(ctx *CommandContext, items []string) (bool, err
 }
 
 // ResetBank should be called when the bank contents for this guild should be reset
-func (b *JeevesBot) ResetBank(ctx *CommandContext) error {
+func (b *Banker) ResetBank(ctx *CommandContext) error {
 	// make  sure that the author of the message can modify the bank
 	if err := b.userCanModifyBank(ctx, ctx.Message.Member); err != nil {
 		return err
@@ -419,7 +409,7 @@ func (b *JeevesBot) ResetBank(ctx *CommandContext) error {
 	}
 
 	// reset the currency of the guild bank
-	guildBank, err := b.GuildBankFromContext(ctx)
+	guildBank, err := ctx.GuildBank()
 	if err != nil {
 		return err
 	}
@@ -428,4 +418,45 @@ func (b *JeevesBot) ResetBank(ctx *CommandContext) error {
 
 	// nothing went wrong
 	return b.UpdateBankListing(ctx)
+}
+
+// CommandContext holds the contextual information for a message that we receive
+type CommandContext struct {
+	context.Context
+	Banker    *Banker
+	GuildID   string
+	ChannelID string
+	Message   *discordgo.Message
+}
+
+// Guild returns the database entry for the current guild
+func (ctx *CommandContext) Guild() (*db.Guild, error) {
+	// look up the database entry associated with this guild
+	return ctx.Banker.Database.Guild.Query().
+		Where(guild.DiscordID(ctx.GuildID)).
+		Only(context.Background())
+}
+
+// GuildBank returns the build bank object associated with the current context
+func (ctx *CommandContext) GuildBank() (*db.GuildBank, error) {
+	return ctx.Banker.Database.GuildBank.Query().
+		Where(guildbank.HasGuildWith(guild.DiscordID(ctx.GuildID))).
+		Only(ctx)
+}
+
+// MemberName returns the display name for a member
+func (ctx *CommandContext) MemberName(user *discordgo.User) string {
+	// look up the membership for this user
+	member, err := ctx.Banker.Discord.GuildMember(ctx.GuildID, user.ID)
+	if err != nil {
+		return ""
+	}
+
+	// if there is a nickname use it
+	if member.Nick != "" {
+		return member.Nick
+	}
+
+	// theres no nickname so the username will have to do
+	return user.Username
 }

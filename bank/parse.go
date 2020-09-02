@@ -7,6 +7,17 @@ import (
 	"github.com/AlecAivazis/jeeves/data"
 )
 
+const (
+	// QuantityDelimiter is the character that separates the amount from the item. Ie, "x" in 2xLava Core
+	QuantityDelimiter = 'x'
+	// CopperDelimiter is the character that designates a copper deposit
+	CopperDelimiter = "c"
+	// SilverDelimiter is the character that designates a silver deposit
+	SilverDelimiter = "s"
+	// GoldDelimiter is the character that designates a Gold deposit
+	GoldDelimiter = "g"
+)
+
 type Transaction struct {
 	Item   string
 	Amount int

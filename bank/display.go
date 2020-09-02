@@ -25,9 +25,9 @@ type bankDisplayData struct {
 }
 
 // UpdateBankListing is called whenever jeeves needs to rerender the bank display
-func (b *JeevesBot) UpdateBankListing(ctx *CommandContext) error {
+func (b *Banker) UpdateBankListing(ctx *CommandContext) error {
 	// find the channel ID for the bank channel for this guild
-	bank, err := b.GuildBankFromContext(ctx)
+	bank, err := ctx.GuildBank()
 	if err != nil {
 		return err
 	}

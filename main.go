@@ -4,21 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/AlecAivazis/jeeves/bot"
-
 	_ "github.com/lib/pq"
 )
 
 func main() {
 	// create an instance of jeeves we can run
-	jeeves, err := bot.New()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	jeeves := &JeevesBot{}
 
 	// start the jeeves bot
-	err = jeeves.Start()
+	err := jeeves.Start()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
