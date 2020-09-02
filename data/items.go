@@ -1,4 +1,4 @@
-package bot
+package data
 
 import (
 	"errors"
@@ -41,7 +41,7 @@ func ItemName(id string) (string, error) {
 
 func init() {
 	// invert each entry in the map so we can look up names if we have the ID
-	for name, id := range itemData {
+	for name, id := range ItemData {
 		itemNames[id] = name
 		itemIDs[strings.ToLower(name)] = id
 	}

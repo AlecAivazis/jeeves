@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/AlecAivazis/jeeves/bot"
@@ -39,16 +38,4 @@ func main() {
 			jeeves.Stop()
 		}
 	}()
-
-	// make sure we have a status check for Cloud Run
-	http.HandleFunc("/", StatusCheck)
-	err = http.ListenAndServe(":"+bot.StatusCheckPort, nil)
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-// StatusCheck is an http endpoint that we can use to make sure the bot is still running
-func StatusCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "OK")
 }

@@ -28,6 +28,7 @@ func New() (*JeevesBot, error) {
 	return &JeevesBot{}, nil
 }
 
+// Start opens Jeeve's connection with the database and discord clients
 func (b *JeevesBot) Start() error {
 	// if there is no token
 	if BotToken == "" {
@@ -128,6 +129,7 @@ func (b *JeevesBot) Reply(ctx *CommandContext, message string) (*discordgo.Messa
 	return b.Discord.ChannelMessageSend(ctx.ChannelID, message)
 }
 
+// MemberName returns the display name for a member
 func (b *JeevesBot) MemberName(ctx *CommandContext, user *discordgo.User) string {
 	// look up the membership for this user
 	member, err := b.Discord.GuildMember(ctx.GuildID, user.ID)
