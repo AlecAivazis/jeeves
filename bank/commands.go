@@ -31,7 +31,9 @@ const (
 	SilverDelimiter = "s"
 	// GoldDelimiter is the character that designates a Gold deposit
 	GoldDelimiter = "g"
+)
 
+const (
 	// CommandDeposit defines the command used to deposit items into the guild bank
 	CommandDeposit = "deposit"
 	// CommandWithdraw defines the command used to withdraw items from the guild bank
