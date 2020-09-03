@@ -51,7 +51,8 @@ func (b *Banker) CommandHandler(session *discordgo.Session, message *discordgo.M
 
 	// construct the context object
 	ctx := &CommandContext{
-		Banker:    b,
+		Database:  b.Database,
+		Discord:   b.Discord,
 		GuildID:   message.GuildID,
 		ChannelID: message.ChannelID,
 		Context:   context.Background(),
@@ -423,7 +424,8 @@ func (b *Banker) ResetBank(ctx *CommandContext) error {
 // CommandContext holds the contextual information for a message that we receive
 type CommandContext struct {
 	context.Context
-	Banker    *Banker
+	Database  *db.Client
+	Discord   *discordgo.Session
 	GuildID   string
 	ChannelID string
 	Message   *discordgo.Message
@@ -432,14 +434,14 @@ type CommandContext struct {
 // Guild returns the database entry for the current guild
 func (ctx *CommandContext) Guild() (*db.Guild, error) {
 	// look up the database entry associated with this guild
-	return ctx.Banker.Database.Guild.Query().
+	return ctx.Database.Guild.Query().
 		Where(guild.DiscordID(ctx.GuildID)).
 		Only(context.Background())
 }
 
 // GuildBank returns the build bank object associated with the current context
 func (ctx *CommandContext) GuildBank() (*db.GuildBank, error) {
-	return ctx.Banker.Database.GuildBank.Query().
+	return ctx.Database.GuildBank.Query().
 		Where(guildbank.HasGuildWith(guild.DiscordID(ctx.GuildID))).
 		Only(ctx)
 }
@@ -447,7 +449,7 @@ func (ctx *CommandContext) GuildBank() (*db.GuildBank, error) {
 // MemberName returns the display name for a member
 func (ctx *CommandContext) MemberName(user *discordgo.User) string {
 	// look up the membership for this user
-	member, err := ctx.Banker.Discord.GuildMember(ctx.GuildID, user.ID)
+	member, err := ctx.Discord.GuildMember(ctx.GuildID, user.ID)
 	if err != nil {
 		return ""
 	}

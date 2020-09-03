@@ -13,12 +13,6 @@ import (
 	"github.com/AlecAivazis/jeeves/db/guildbank"
 )
 
-//////////////////////////////////
-//
-// Guild Bank Display
-//
-//////////////////////////////////
-
 type bankDisplayData struct {
 	Items   []*db.BankItem
 	Balance int
